@@ -18,7 +18,7 @@ class databaseConfigurations extends abstractServiceConfigurations {
      * databaseConfigurations constructor.
      */
     public function __construct() {
-        $dbNames = getenv('DATABASES');
+        $dbNames = getenv('MYSQL');
         if (!empty($dbNames)) {
             $dbNames = explode(',', $dbNames);
             foreach ($dbNames ?? [] as $dbName) {
