@@ -4,7 +4,7 @@ namespace carlonicora\minimalism\services\MySQL\factories;
 use carlonicora\minimalism\core\services\exceptions\configurationException;
 use carlonicora\minimalism\core\services\abstracts\abstractServiceFactory;
 use carlonicora\minimalism\services\MySQL\configurations\databaseConfigurations;
-use carlonicora\minimalism\services\MySQL\mySQL;
+use carlonicora\minimalism\services\MySQL\MySQL;
 use carlonicora\minimalism\core\services\factories\servicesFactory;
 
 class serviceFactory  extends abstractServiceFactory {
@@ -23,7 +23,7 @@ class serviceFactory  extends abstractServiceFactory {
      * @param servicesFactory $services
      * @return mySQL
      */
-    public function create(servicesFactory $services): mySQL {
+    public function create(servicesFactory $services): MySQL {
         return new MySQL($this->configData, $services);
     }
 }
