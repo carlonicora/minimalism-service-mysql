@@ -21,7 +21,7 @@ class serviceFactory  extends abstractServiceFactory {
 
     /**
      * @param servicesFactory $services
-     * @return mySQL
+     * @return MySQL
      */
     public function create(servicesFactory $services): MySQL {
         return new MySQL($this->configData, $services);
