@@ -73,6 +73,14 @@ class MySQL extends abstractService {
     }
 
     /**
+     * @param string $databaseConnectionName
+     * @return bool
+     */
+    public function hasConfiguration(string $databaseConnectionName): bool {
+        return !empty($this->configData->databaseConnectionStrings[$databaseConnectionName]);
+    }
+
+    /**
      *
      */
     public function cleanNonPersistentVariables(): void {
