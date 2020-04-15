@@ -36,7 +36,7 @@ class MySQL extends abstractService {
         }
 
         if (!class_exists($dbReader)) {
-            return null;
+            throw new configurationException(self::class, 'Database reader class ' . $dbReader . ' does not exist.');
         }
 
         /** @var abstractDatabaseManager $response */
