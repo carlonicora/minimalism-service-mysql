@@ -10,3 +10,10 @@ services:
       - ../:/opt/project
     tty: true
     stdin_open: true
+    networks:
+      - default_network
+
+networks:
+  default_network:
+    driver: bridge
+    name: carlonicora

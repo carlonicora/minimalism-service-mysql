@@ -1,12 +1,19 @@
 <?php
 namespace carlonicora\minimalism\services\MySQL\abstracts;
 
+use carlonicora\minimalism\core\services\exceptions\serviceNotFoundException;
+use carlonicora\minimalism\core\services\factories\servicesFactory;
+use carlonicora\minimalism\services\logger\traits\logger;
 use carlonicora\minimalism\services\MySQL\exceptions\dbRecordNotFoundException;
 use carlonicora\minimalism\services\MySQL\exceptions\dbSqlException;
+use carlonicora\minimalism\services\MySQL\errors\errors;
+use JsonException;
 use mysqli;
 use mysqli_stmt;
 
 abstract class abstractDatabaseManager {
+    use logger;
+
     public const RECORD_STATUS_NEW = 1;
     public const RECORD_STATUS_UNCHANGED = 2;
     public const RECORD_STATUS_UPDATED = 3;
@@ -47,8 +54,12 @@ abstract class abstractDatabaseManager {
 
     /**
      * abstractDatabaseManager constructor.
+     * @param servicesFactory $services
+     * @throws serviceNotFoundException
      */
-    public function __construct() {
+    public function __construct(servicesFactory $services) {
+        $this->loggerInitialise($services);
+
         $fullName = get_class($this);
         $fullNameParts = explode('\\', $fullName);
 
@@ -97,11 +108,86 @@ abstract class abstractDatabaseManager {
     }
 
     /**
-     * @param array $records
+     * @param mysqli_stmt $statement
+     * @return string
+     */
+    private function getStatementErrors(mysqli_stmt $statement): string {
+        $errorDetails = 'Error ' . $statement->errno . ' ' . $statement->sqlstate . ': ' . $statement->error . PHP_EOL;
+        foreach ($statement->error_list as $error) {
+            $errorDetails .= 'Error ' . $error['errno'] . ' ' . $error['sqlstate'] . ': ' . $error['error'] . PHP_EOL;
+        }
+
+        return 'Error ' . $statement->errno . ': ' . $statement->error . PHP_EOL . $errorDetails;
+    }
+
+    /**
+     * @param bool $enabled
      * @throws dbSqlException
      */
-    public function delete(array $records): void {
-        $this->update($records, true);
+    private function toggleAutocommit(bool $enabled = true): void {
+        if (false === $this->connection->autocommit($enabled)) {
+            $this->loggerWriteError(
+                ($enabled ? errors::ERROR_ENABLE_AUTOCOMMIT : errors::ERROR_DISABLE_AUTOCOMMIT),
+                'MySQL failed to ' . ($enabled ? 'enable' : 'disable') . ' autocommit. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
+                errors::LOGGER_SERVICE_NAME
+            );
+            throw new dbSqlException('MySQL failed to ' . ($enabled ? 'enable' : 'disable') . ' autocommit. '
+                . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
+        }
+    }
+
+    /**
+     * @param mysqli_stmt $statement
+     * @throws dbSqlException
+     */
+    private function closeStatement(mysqli_stmt $statement) : void {
+        if (false === $statement->close()) {
+            $this->loggerWriteError(
+                errors::ERROR_CLOSE_STATEMENT,
+                'MySQL failed to close statement. ' . $this->getStatementErrors($statement),
+                errors::LOGGER_SERVICE_NAME
+            );
+            throw new dbSqlException('MySQL failed to close statement. ' . $this->getStatementErrors($statement));
+        }
+    }
+
+    /**
+     * @param string $sql
+     * @param array $parameters
+     * @return mysqli_stmt
+     * @throws dbSqlException
+     */
+    protected function executeStatement(string $sql, array $parameters = []): mysqli_stmt {
+        $statement = $this->connection->prepare($sql);
+        if ($statement === false) {
+            $this->loggerWriteError(
+                errors::ERROR_STATEMENT_PREPARATION,
+                'MySQL statement (' . $sql . ') preparation failed. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
+                errors::LOGGER_SERVICE_NAME
+            );
+            throw new dbSqlException('MySQL statement preparation failed. '
+                . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
+        }
+
+        if (false === empty($parameters)) {
+            call_user_func_array(array($statement, 'bind_param'), $this->refValues($parameters));
+        }
+
+        if (false === $statement->execute()) {
+            try {
+                $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR, 512);
+            } catch (JsonException $e) {
+                $jsonParameters = '';
+            }
+            $this->loggerWriteError(
+                errors::ERROR_STATEMENT_EXECUTION,
+                'MySQL statement (' . $sql . ') execution (' . $jsonParameters . ') failed. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
+                errors::LOGGER_SERVICE_NAME
+            );
+            throw new dbSqlException('MySql statement execution failed. ' . $this->getStatementErrors($statement));
+        }
+
+        return $statement;
     }
 
     /**
@@ -111,20 +197,86 @@ abstract class abstractDatabaseManager {
      */
     public function runSql($sql, $parameters=null): void {
         try {
-            if (false === $this->connection->autocommit(false)) {
-                throw new dbSqlException('MySQL failed to disable autocommit. '
-                    . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
-            }
-
+            $this->toggleAutocommit(false);
             $statement = $this->executeStatement($sql, $parameters);
-            if (false === $statement->close()) {
-                throw new dbSqlException('MySQL filed to close statement. ' . $this->getStatementErrors($statement));
+            $this->closeStatement($statement);
+            $this->toggleAutocommit(true);
+        } catch (dbSqlException $exception) {
+            $this->connection->rollback();
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param $sql
+     * @param null $parameters
+     * @return array
+     * @throws dbSqlException
+     */
+    protected function runRead($sql, $parameters=null): array {
+        $response = [];
+
+        $statement = $this->executeStatement($sql, $parameters);
+        $results = $statement->get_result();
+
+        if ($results !== false && $results->num_rows > 0){
+            while ($record = $results->fetch_assoc()){
+                $this->addOriginalValues($record);
+                $response[] = $record;
+            }
+        }
+
+        $this->closeStatement($statement);
+
+        return $response;
+    }
+
+    /**
+     * @param $sql
+     * @param null $parameters
+     * @return array
+     * @throws dbRecordNotFoundException
+     * @throws dbSqlException
+     */
+    protected function runReadSingle($sql, $parameters=null): array {
+        $response = $this->runRead($sql, $parameters);
+
+        if (count($response) === 0) {
+            throw new dbRecordNotFoundException('Record not found');
+        }
+
+        if (count($response) > 1) {
+            throw new dbRecordNotFoundException('Multiple records found');
+        }
+
+        return $response[0];
+    }
+
+    /**
+     * @param array $objects
+     * @throws dbSqlException
+     */
+    protected function runUpdate(array &$objects): void {
+        try {
+            $this->toggleAutocommit(false);
+
+            foreach ($objects as $objectKey => $object) {
+                if (array_key_exists('_sql', $object)) {
+                    $statement = $this->executeStatement($object['_sql']['statement'], $object['_sql']['parameters']);
+
+                    $this->closeStatement($statement);
+
+                    if (isset($this->autoIncrementField) && $object['_sql']['status'] === self::RECORD_STATUS_NEW) {
+                        $objects[$objectKey][$this->autoIncrementField] = $this->connection->insert_id;
+                    }
+
+                    unset($objects[$objectKey]['_sql']);
+
+                    $this->addOriginalValues($objects[$objectKey]);
+                }
             }
 
-            if (false === $this->connection->autocommit(true)) {
-                throw new dbSqlException('MySQL failed to enable autocommit. '
-                    . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
-            }
+            $this->toggleAutocommit(true);
         } catch (dbSqlException $exception) {
             $this->connection->rollback();
             throw $exception;
@@ -183,7 +335,7 @@ abstract class abstractDatabaseManager {
                     foreach ($parametersToUse as $parameter){
                         if (count($parameters) === 0){
                             $parameters[] = $parameter;
-                        } else if (array_key_exists($parameter, $record)){
+                        } elseif (array_key_exists($parameter, $record)){
                             $parameters[] = $record[$parameter];
                         } else {
                             $parameters[] = null;
@@ -209,128 +361,11 @@ abstract class abstractDatabaseManager {
     }
 
     /**
-     * @param $sql
-     * @param null $parameters
-     * @return array
+     * @param array $records
      * @throws dbSqlException
      */
-    protected function runRead($sql, $parameters=null): array {
-        $response = [];
-
-        $statement = $this->executeStatement($sql, $parameters);
-        $results = $statement->get_result();
-
-        if ($results !== false && $results->num_rows > 0){
-            while ($record = $results->fetch_assoc()){
-                $this->addOriginalValues($record);
-                $response[] = $record;
-            }
-        }
-
-        if (false === $statement->close()) {
-            throw new dbSqlException('MySQL filed to close statement. ' . $this->getStatementErrors($statement));
-        }
-
-        return $response;
-    }
-
-    /**
-     * @param mysqli_stmt $statement
-     * @return string
-     */
-    private function getStatementErrors(mysqli_stmt $statement): string {
-        $errorDetails = 'Error ' . $statement->errno . ' ' . $statement->sqlstate . ': ' . $statement->error . PHP_EOL;
-        foreach ($statement->error_list as $error) {
-            $errorDetails .= 'Error ' . $error['errno'] . ' ' . $error['sqlstate'] . ': ' . $error['error'] . PHP_EOL;
-        }
-
-        return 'Error ' . $statement->errno . ': ' . $statement->error . PHP_EOL . $errorDetails;
-    }
-
-    /**
-     * @param array $objects
-     * @throws dbSqlException
-     */
-    protected function runUpdate(array &$objects): void
-    {
-        try {
-            if (false === $this->connection->autocommit(false)) {
-                throw new dbSqlException('MySQL failed to disable autocommit. '
-                    . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
-            }
-
-            foreach ($objects as $objectKey => $object) {
-                if (array_key_exists('_sql', $object)) {
-                    $statement = $this->executeStatement($object['_sql']['statement'], $object['_sql']['parameters']);
-
-                    if (false === $statement->close()) {
-                        throw new dbSqlException('MySQL filed to close statement. ' . $this->getStatementErrors($statement));
-                    }
-
-                    if (isset($this->autoIncrementField) && $object['_sql']['status'] === self::RECORD_STATUS_NEW) {
-                        $objects[$objectKey][$this->autoIncrementField] = $this->connection->insert_id;
-                    }
-
-                    unset($objects[$objectKey]['_sql']);
-
-                    $this->addOriginalValues($objects[$objectKey]);
-                }
-            }
-
-            if (false === $this->connection->autocommit(true)) {
-                throw new dbSqlException('MySQL failed to enable autocommit. '
-                    . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
-            }
-        } catch (dbSqlException $exception) {
-            $this->connection->rollback();
-            throw $exception;
-        }
-    }
-
-    /**
-     * @param string $sql
-     * @param array $parameters
-     * @return mysqli_stmt
-     * @throws dbSqlException
-     */
-    protected function executeStatement(string $sql, array $parameters = []): mysqli_stmt
-    {
-        $statement = $this->connection->prepare($sql);
-        if ($statement === false) {
-            throw new dbSqlException('MySQL statement preparation failed. '
-                . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
-        }
-
-        if (false === empty($parameters)) {
-            call_user_func_array(array($statement, 'bind_param'), $this->refValues($parameters));
-        }
-
-        if (false === $statement->execute()) {
-            throw new dbSqlException('MySql statement execution failed. ' . $this->getStatementErrors($statement));
-        }
-
-        return $statement;
-    }
-
-    /**
-     * @param $sql
-     * @param null $parameters
-     * @return array
-     * @throws dbRecordNotFoundException
-     * @throws dbSqlException
-     */
-    protected function runReadSingle($sql, $parameters=null): array {
-        $response = $this->runRead($sql, $parameters);
-
-        if (count($response) === 0) {
-            throw new dbRecordNotFoundException('Record not found');
-        }
-
-        if (count($response) > 1) {
-            throw new dbRecordNotFoundException('Multiple records found');
-        }
-
-        return $response[0];
+    public function delete(array $records): void {
+        $this->update($records, true);
     }
 
     /**
@@ -403,9 +438,9 @@ abstract class abstractDatabaseManager {
         if (is_int($fieldType)){
             if (($fieldType & self::INTEGER) > 0){
                 $fieldType = 'i';
-            } else if (($fieldType & self::DOUBLE) > 0){
+            } elseif (($fieldType & self::DOUBLE) > 0){
                 $fieldType = 'd';
-            } else if (($fieldType & self::STRING) > 0){
+            } elseif (($fieldType & self::STRING) > 0){
                 $fieldType = 's';
             } else {
                 $fieldType = 'b';
