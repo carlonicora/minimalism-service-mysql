@@ -49,7 +49,7 @@ class MySQL extends abstractService {
                 'Database reader class ' . $dbReader . ' does not exist.',
                 errors::LOGGER_SERVICE_NAME
             );
-            throw new configurationException(self::class, 'Database reader class ' . $dbReader . ' does not exist.');
+            throw new configurationException(self::class, 'reader class missing', errors::ERROR_READER_CLASS_NOT_FOUND);
         }
 
         /** @var abstractDatabaseManager $response */
@@ -67,7 +67,7 @@ class MySQL extends abstractService {
                     'Missing connection details for ' . $databaseName,
                     errors::LOGGER_SERVICE_NAME
                 );
-                throw new configurationException(self::class, 'Missing connection details for ' . $databaseName);
+                throw new configurationException(self::class, 'connection details missing', errors::ERROR_MISSING_CONNECTION_DETAILS);
             }
 
             $connection = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
@@ -80,8 +80,7 @@ class MySQL extends abstractService {
                     $databaseName . '  database connection error ' . $connection->connect_error . ': ' . $connection->connect_error,
                     errors::LOGGER_SERVICE_NAME
                 );
-                throw new configurationException(self::class, $databaseName . '  database connection error '
-                    . $connection->connect_error . ': ' .  $connection->connect_error);
+                throw new configurationException(self::class, 'error connecting to the database',errors::ERROR_CONNECTION_ERROR);
             }
 
             $connection->set_charset('utf8mb4');

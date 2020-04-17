@@ -131,8 +131,7 @@ abstract class abstractDatabaseManager {
                 'MySQL failed to ' . ($enabled ? 'enable' : 'disable') . ' autocommit. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
                 errors::LOGGER_SERVICE_NAME
             );
-            throw new dbSqlException('MySQL failed to ' . ($enabled ? 'enable' : 'disable') . ' autocommit. '
-                . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
+            throw new dbSqlException('Autocommit failed', ($enabled ? errors::ERROR_ENABLE_AUTOCOMMIT : errors::ERROR_DISABLE_AUTOCOMMIT));
         }
     }
 
@@ -147,7 +146,7 @@ abstract class abstractDatabaseManager {
                 'MySQL failed to close statement. ' . $this->getStatementErrors($statement),
                 errors::LOGGER_SERVICE_NAME
             );
-            throw new dbSqlException('MySQL failed to close statement. ' . $this->getStatementErrors($statement));
+            throw new dbSqlException('MySQL failed to close statement.', errors::ERROR_CLOSE_STATEMENT);
         }
     }
 
@@ -165,8 +164,7 @@ abstract class abstractDatabaseManager {
                 'MySQL statement (' . $sql . ') preparation failed. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
                 errors::LOGGER_SERVICE_NAME
             );
-            throw new dbSqlException('MySQL statement preparation failed. '
-                . 'Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error);
+            throw new dbSqlException('MySQL statement preparation failed', errors::ERROR_STATEMENT_PREPARATION);
         }
 
         if (false === empty($parameters)) {
@@ -181,10 +179,10 @@ abstract class abstractDatabaseManager {
             }
             $this->loggerWriteError(
                 errors::ERROR_STATEMENT_EXECUTION,
-                'MySQL statement (' . $sql . ') execution (' . $jsonParameters . ') failed. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
+                'MySQL statement (' . $sql . ') execution (' . $jsonParameters . ') failed. ' . $this->getStatementErrors($statement),
                 errors::LOGGER_SERVICE_NAME
             );
-            throw new dbSqlException('MySql statement execution failed. ' . $this->getStatementErrors($statement));
+            throw new dbSqlException('MySql statement execution failed.', errors::ERROR_STATEMENT_EXECUTION);
         }
 
         return $statement;
