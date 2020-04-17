@@ -189,11 +189,11 @@ abstract class abstractDatabaseManager {
     }
 
     /**
-     * @param $sql
-     * @param null $parameters
+     * @param string $sql
+     * @param array $parameters
      * @throws dbSqlException
      */
-    public function runSql($sql, $parameters=null): void {
+    public function runSql(string $sql, array $parameters=[]): void {
         try {
             $this->toggleAutocommit(false);
             $statement = $this->executeStatement($sql, $parameters);
@@ -206,12 +206,12 @@ abstract class abstractDatabaseManager {
     }
 
     /**
-     * @param $sql
-     * @param null $parameters
+     * @param string $sql
+     * @param array $parameters
      * @return array
      * @throws dbSqlException
      */
-    protected function runRead($sql, $parameters=null): array {
+    protected function runRead(string $sql, array $parameters=[]): array {
         $response = [];
 
         $statement = $this->executeStatement($sql, $parameters);
@@ -230,13 +230,13 @@ abstract class abstractDatabaseManager {
     }
 
     /**
-     * @param $sql
-     * @param null $parameters
+     * @param string $sql
+     * @param array $parameters
      * @return array
      * @throws dbRecordNotFoundException
      * @throws dbSqlException
      */
-    protected function runReadSingle($sql, $parameters=null): array {
+    protected function runReadSingle(string $sql, array $parameters=[]): array {
         $response = $this->runRead($sql, $parameters);
 
         if (count($response) === 0) {
