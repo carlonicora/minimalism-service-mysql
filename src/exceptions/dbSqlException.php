@@ -1,8 +1,8 @@
 <?php
 namespace carlonicora\minimalism\services\MySQL\exceptions;
 
-use Exception;
+use RuntimeException;
 
-class dbSqlException extends Exception {
+class dbSqlException extends RuntimeException {
 
 }

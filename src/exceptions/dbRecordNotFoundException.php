@@ -1,7 +1,7 @@
 <?php
 namespace carlonicora\minimalism\services\MySQL\exceptions;
 
-use Exception;
+use RuntimeException;
 
-class dbRecordNotFoundException extends Exception {
+class dbRecordNotFoundException extends RuntimeException {
 }
