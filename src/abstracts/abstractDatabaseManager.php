@@ -678,7 +678,15 @@ abstract class abstractDatabaseManager {
         $sql = $this->generateSelectStatement();
         $parameters = $this->generateSelectParameters();
 
-        $parameters[1] = $id;
+        if (is_array($id)) {
+            foreach ($parameters as $key => $fieldName) {
+                if (isset($id[$fieldName])) {
+                    $parameters[$key] = $id[$fieldName];
+                }
+            }
+        } else {
+            $parameters[1] = $id;
+        }
 
         return $this->runReadSingle($sql, $parameters);
     }
