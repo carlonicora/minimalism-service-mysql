@@ -174,7 +174,7 @@ abstract class abstractDatabaseManager {
         if (false === $statement->execute()) {
             try {
                 $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR, 512);
-            } catch (JsonException $e) {
+            } /** @noinspection PhpRedundantCatchClauseInspection */ catch (JsonException $e) {
                 $jsonParameters = '';
             }
             $this->loggerWriteError(
