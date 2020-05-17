@@ -3,8 +3,8 @@ namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
 use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
 use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DDbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DDbSqlException;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\errors\EErrors;
 use JsonException;
 use mysqli;
@@ -117,7 +117,7 @@ abstract class aabstractDatabaseManager {
 
     /**
      * @param bool $enabled
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     private function toggleAutocommit(bool $enabled = true): void {
         if (false === $this->connection->autocommit($enabled)) {
@@ -126,13 +126,13 @@ abstract class aabstractDatabaseManager {
                 'MySQL failed to ' . ($enabled ? 'enable' : 'disable') . ' autocommit. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
                 EErrors::LOGGER_SERVICE_NAME
             );
-            throw new DDbSqlException('Autocommit failed', ($enabled ? EErrors::ERROR_ENABLE_AUTOCOMMIT : EErrors::ERROR_DISABLE_AUTOCOMMIT));
+            throw new DbSqlException('Autocommit failed', ($enabled ? EErrors::ERROR_ENABLE_AUTOCOMMIT : EErrors::ERROR_DISABLE_AUTOCOMMIT));
         }
     }
 
     /**
      * @param mysqli_stmt $statement
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     private function closeStatement(mysqli_stmt $statement) : void {
         if (false === $statement->close()) {
@@ -141,7 +141,7 @@ abstract class aabstractDatabaseManager {
                 'MySQL failed to close statement. ' . $this->getStatementErrors($statement),
                 EErrors::LOGGER_SERVICE_NAME
             );
-            throw new DDbSqlException('MySQL failed to close statement.', EErrors::ERROR_CLOSE_STATEMENT);
+            throw new DbSqlException('MySQL failed to close statement.', EErrors::ERROR_CLOSE_STATEMENT);
         }
     }
 
@@ -149,7 +149,7 @@ abstract class aabstractDatabaseManager {
      * @param string $sql
      * @param array $parameters
      * @return mysqli_stmt
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     protected function executeStatement(string $sql, array $parameters = []): mysqli_stmt {
         $statement = $this->connection->prepare($sql);
@@ -159,7 +159,7 @@ abstract class aabstractDatabaseManager {
                 'MySQL statement (' . $sql . ') preparation failed. Error ' . $this->connection->errno . ' ' . $this->connection->sqlstate . ': ' . $this->connection->error,
                 EErrors::LOGGER_SERVICE_NAME
             );
-            throw new DDbSqlException('MySQL statement preparation failed', EErrors::ERROR_STATEMENT_PREPARATION);
+            throw new DbSqlException('MySQL statement preparation failed', EErrors::ERROR_STATEMENT_PREPARATION);
         }
 
         if (false === empty($parameters)) {
@@ -177,7 +177,7 @@ abstract class aabstractDatabaseManager {
                 'MySQL statement (' . $sql . ') execution (' . $jsonParameters . ') failed. ' . $this->getStatementErrors($statement),
                 EErrors::LOGGER_SERVICE_NAME
             );
-            throw new DDbSqlException('MySql statement execution failed.', EErrors::ERROR_STATEMENT_EXECUTION);
+            throw new DbSqlException('MySql statement execution failed.', EErrors::ERROR_STATEMENT_EXECUTION);
         }
 
         return $statement;
@@ -186,7 +186,7 @@ abstract class aabstractDatabaseManager {
     /**
      * @param string $sql
      * @param array $parameters
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     public function runSql(string $sql, array $parameters=[]): void {
         try {
@@ -194,7 +194,7 @@ abstract class aabstractDatabaseManager {
             $statement = $this->executeStatement($sql, $parameters);
             $this->closeStatement($statement);
             $this->toggleAutocommit(true);
-        } catch (DDbSqlException $exception) {
+        } catch (DbSqlException $exception) {
             $this->connection->rollback();
             throw $exception;
         }
@@ -204,7 +204,7 @@ abstract class aabstractDatabaseManager {
      * @param string $sql
      * @param array $parameters
      * @return array
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     protected function runRead(string $sql, array $parameters=[]): array {
         $response = [];
@@ -228,18 +228,18 @@ abstract class aabstractDatabaseManager {
      * @param string $sql
      * @param array $parameters
      * @return array
-     * @throws DDbRecordNotFoundException
-     * @throws DDbSqlException
+     * @throws DbRecordNotFoundException
+     * @throws DbSqlException
      */
     protected function runReadSingle(string $sql, array $parameters=[]): array {
         $response = $this->runRead($sql, $parameters);
 
         if (count($response) === 0) {
-            throw new DDbRecordNotFoundException('Record not found');
+            throw new DbRecordNotFoundException('Record not found');
         }
 
         if (count($response) > 1) {
-            throw new DDbRecordNotFoundException('Multiple records found');
+            throw new DbRecordNotFoundException('Multiple records found');
         }
 
         return $response[0];
@@ -247,7 +247,7 @@ abstract class aabstractDatabaseManager {
 
     /**
      * @param array $objects
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     protected function runUpdate(array &$objects): void {
         try {
@@ -270,7 +270,7 @@ abstract class aabstractDatabaseManager {
             }
 
             $this->toggleAutocommit(true);
-        } catch (DDbSqlException $exception) {
+        } catch (DbSqlException $exception) {
             $this->connection->rollback();
             throw $exception;
         }
@@ -279,7 +279,7 @@ abstract class aabstractDatabaseManager {
     /**
      * @param array $records
      * @param bool $delete
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     public function update(array &$records, bool $delete=false): void {
         $isSingle = false;
@@ -355,7 +355,7 @@ abstract class aabstractDatabaseManager {
 
     /**
      * @param array $records
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     public function delete(array $records): void {
         $this->update($records, true);
@@ -666,8 +666,8 @@ abstract class aabstractDatabaseManager {
     /**
      * @param $id
      * @return array
-     * @throws DDbRecordNotFoundException
-     * @throws DDbSqlException
+     * @throws DbRecordNotFoundException
+     * @throws DbSqlException
      */
     public function loadFromId($id): array {
         $sql = $this->generateSelectStatement();
@@ -680,7 +680,7 @@ abstract class aabstractDatabaseManager {
 
     /**
      * @return array
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     public function loadAll(): array {
         $sql = 'SELECT * FROM ' . $this->tableName . ';';
@@ -690,7 +690,7 @@ abstract class aabstractDatabaseManager {
 
     /**
      * @return int
-     * @throws DDbSqlException
+     * @throws DbSqlException
      */
     public function count(): int {
         $sql = 'SELECT count(*) as counter FROM ' . $this->tableName . ';';
@@ -698,7 +698,7 @@ abstract class aabstractDatabaseManager {
         try {
             $responseArray = $this->runReadSingle($sql);
             $response = $responseArray['counter'];
-        } catch (DDbRecordNotFoundException $e) {
+        } catch (DbRecordNotFoundException $e) {
             $response = 0;
         }
 

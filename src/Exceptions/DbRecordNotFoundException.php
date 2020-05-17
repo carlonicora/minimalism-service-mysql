@@ -3,6 +3,5 @@ namespace CarloNicora\Minimalism\Services\MySQL\Exceptions;
 
 use Exception;
 
-class DDbSqlException extends Exception {
-
+class DbRecordNotFoundException extends Exception {
 }

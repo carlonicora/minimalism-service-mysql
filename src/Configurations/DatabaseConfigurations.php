@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Configurations;
 use CarloNicora\Minimalism\core\Services\Abstracts\AbstractServiceConfigurations;
 use mysqli;
 
-class DDatabaseConfigurations extends abstractServiceConfigurations {
+class DatabaseConfigurations extends abstractServiceConfigurations {
     /** @var array */
     private array $databases = [];
 

@@ -7,13 +7,13 @@ use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
 use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\core\Services\Interfaces\serviceConfigurationsInterface;
 use CarloNicora\Minimalism\Services\MySQL\Abstracts\aabstractDatabaseManager;
-use CarloNicora\Minimalism\Services\MySQL\Configurations\DDatabaseConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\Configurations\DatabaseConfigurations;
 use CarloNicora\Minimalism\Services\MySQL\errors\EErrors;
 use mysqli;
 
 class MySQL extends abstractService {
-    /** @var DDatabaseConfigurations  */
-    private DDatabaseConfigurations $configData;
+    /** @var DatabaseConfigurations  */
+    private DatabaseConfigurations $configData;
 
     /**
      * abstractApiCaller constructor.
