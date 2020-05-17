@@ -4,18 +4,18 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 use CarloNicora\Minimalism\core\Services\Exceptions\configurationException;
 use CarloNicora\Minimalism\core\Services\Abstracts\AbstractServiceFactory;
 use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Configurations\databaseConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\Configurations\DDatabaseConfigurations;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
 
-class serviceFactory  extends abstractServiceFactory {
+class SServiceFactory  extends abstractServiceFactory {
     /**
      * serviceFactory constructor.
      * @param servicesFactory $services
      * @throws configurationException
      */
     public function __construct(servicesFactory $services) {
-        $this->configData = new databaseConfigurations();
+        $this->configData = new DDatabaseConfigurations();
 
         parent::__construct($services);
     }

@@ -3,7 +3,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\errors;
 
 use CarloNicora\Minimalism\Services\logger\Abstracts\AbstractErrors;
 
-class errors extends abstractErrors {
+class EErrors extends abstractErrors {
     /** @var string  */
     public const LOGGER_SERVICE_NAME = 'minimalism-service-mysql';
 

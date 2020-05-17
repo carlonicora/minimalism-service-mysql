@@ -6,14 +6,14 @@ use CarloNicora\Minimalism\core\Services\Abstracts\AbstractService;
 use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
 use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\core\Services\Interfaces\serviceConfigurationsInterface;
-use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractDatabaseManager;
-use CarloNicora\Minimalism\Services\MySQL\Configurations\databaseConfigurations;
-use CarloNicora\Minimalism\Services\MySQL\errors\errors;
+use CarloNicora\Minimalism\Services\MySQL\Abstracts\aabstractDatabaseManager;
+use CarloNicora\Minimalism\Services\MySQL\Configurations\DDatabaseConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\errors\EErrors;
 use mysqli;
 
 class MySQL extends abstractService {
-    /** @var databaseConfigurations  */
-    private databaseConfigurations $configData;
+    /** @var DDatabaseConfigurations  */
+    private DDatabaseConfigurations $configData;
 
     /**
      * abstractApiCaller constructor.
@@ -31,24 +31,24 @@ class MySQL extends abstractService {
 
     /**
      * @param string $dbReader
-     * @return abstractDatabaseManager
+     * @return aabstractDatabaseManager
      * @throws configurationException
      */
-    public function create(string $dbReader): abstractDatabaseManager {
+    public function create(string $dbReader): aabstractDatabaseManager {
         if (array_key_exists($dbReader, $this->configData->tableManagers)) {
             return $this->configData->tableManagers[$dbReader];
         }
 
         if (!class_exists($dbReader)) {
             $this->loggerWriteError(
-                errors::ERROR_READER_CLASS_NOT_FOUND,
+                EErrors::ERROR_READER_CLASS_NOT_FOUND,
                 'Database reader class ' . $dbReader . ' does not exist.',
-                errors::LOGGER_SERVICE_NAME
+                EErrors::LOGGER_SERVICE_NAME
             );
-            throw new configurationException(self::class, 'reader class missing', errors::ERROR_READER_CLASS_NOT_FOUND);
+            throw new configurationException(self::class, 'reader class missing', EErrors::ERROR_READER_CLASS_NOT_FOUND);
         }
 
-        /** @var abstractDatabaseManager $response */
+        /** @var aabstractDatabaseManager $response */
         $response = new $dbReader($this->services);
 
         $databaseName = $response->getDbToUse();
@@ -59,11 +59,11 @@ class MySQL extends abstractService {
 
             if (empty($dbConf)) {
                 $this->loggerWriteError(
-                    errors::ERROR_MISSING_CONNECTION_DETAILS,
+                    EErrors::ERROR_MISSING_CONNECTION_DETAILS,
                     'Missing connection details for ' . $databaseName,
-                    errors::LOGGER_SERVICE_NAME
+                    EErrors::LOGGER_SERVICE_NAME
                 );
-                throw new configurationException(self::class, 'connection details missing', errors::ERROR_MISSING_CONNECTION_DETAILS);
+                throw new configurationException(self::class, 'connection details missing', EErrors::ERROR_MISSING_CONNECTION_DETAILS);
             }
 
             $connection = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
@@ -72,11 +72,11 @@ class MySQL extends abstractService {
 
             if ($connection->connect_errno) {
                 $this->loggerWriteError(
-                    errors::ERROR_CONNECTION_ERROR,
+                    EErrors::ERROR_CONNECTION_ERROR,
                     $databaseName . '  database connection error ' . $connection->connect_error . ': ' . $connection->connect_error,
-                    errors::LOGGER_SERVICE_NAME
+                    EErrors::LOGGER_SERVICE_NAME
                 );
-                throw new configurationException(self::class, 'error connecting to the database',errors::ERROR_CONNECTION_ERROR);
+                throw new configurationException(self::class, 'error connecting to the database',EErrors::ERROR_CONNECTION_ERROR);
             }
 
             $connection->set_charset('utf8mb4');
