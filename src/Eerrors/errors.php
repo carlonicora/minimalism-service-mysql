@@ -1,7 +1,7 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL\errors;
+namespace CarloNicora\Minimalism\Services\MySQL\errors;
 
-use carlonicora\minimalism\services\logger\abstracts\abstractErrors;
+use CarloNicora\Minimalism\Services\logger\Abstracts\AbstractErrors;
 
 class errors extends abstractErrors {
     /** @var string  */

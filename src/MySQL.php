@@ -1,20 +1,17 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL;
+namespace CarloNicora\Minimalism\Services\MySQL;
 
-use carlonicora\minimalism\core\services\exceptions\configurationException;
-use carlonicora\minimalism\core\services\abstracts\abstractService;
-use carlonicora\minimalism\core\services\exceptions\serviceNotFoundException;
-use carlonicora\minimalism\core\services\factories\servicesFactory;
-use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
-use carlonicora\minimalism\services\logger\traits\logger;
-use carlonicora\minimalism\services\MySQL\abstracts\abstractDatabaseManager;
-use carlonicora\minimalism\services\MySQL\configurations\databaseConfigurations;
-use carlonicora\minimalism\services\MySQL\errors\errors;
+use CarloNicora\Minimalism\core\Services\Exceptions\configurationException;
+use CarloNicora\Minimalism\core\Services\Abstracts\AbstractService;
+use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
+use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\core\Services\Interfaces\serviceConfigurationsInterface;
+use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractDatabaseManager;
+use CarloNicora\Minimalism\Services\MySQL\Configurations\databaseConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\errors\errors;
 use mysqli;
 
 class MySQL extends abstractService {
-    use logger;
-
     /** @var databaseConfigurations  */
     private databaseConfigurations $configData;
 
@@ -30,7 +27,6 @@ class MySQL extends abstractService {
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->configData = $configData;
 
-        $this->loggerInitialise($services);
     }
 
     /**

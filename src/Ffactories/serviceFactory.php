@@ -1,12 +1,12 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL\factories;
+namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
-use carlonicora\minimalism\core\services\exceptions\configurationException;
-use carlonicora\minimalism\core\services\abstracts\abstractServiceFactory;
-use carlonicora\minimalism\core\services\exceptions\serviceNotFoundException;
-use carlonicora\minimalism\services\MySQL\configurations\databaseConfigurations;
-use carlonicora\minimalism\services\MySQL\MySQL;
-use carlonicora\minimalism\core\services\factories\servicesFactory;
+use CarloNicora\Minimalism\core\Services\Exceptions\configurationException;
+use CarloNicora\Minimalism\core\Services\Abstracts\AbstractServiceFactory;
+use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\Configurations\databaseConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
+use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
 
 class serviceFactory  extends abstractServiceFactory {
     /**

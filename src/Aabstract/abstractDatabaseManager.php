@@ -1,19 +1,16 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL\abstracts;
+namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
-use carlonicora\minimalism\core\services\exceptions\serviceNotFoundException;
-use carlonicora\minimalism\core\services\factories\servicesFactory;
-use carlonicora\minimalism\services\logger\traits\logger;
-use carlonicora\minimalism\services\MySQL\exceptions\dbRecordNotFoundException;
-use carlonicora\minimalism\services\MySQL\exceptions\dbSqlException;
-use carlonicora\minimalism\services\MySQL\errors\errors;
+use CarloNicora\Minimalism\core\Services\Exceptions\serviceNotFoundException;
+use CarloNicora\Minimalism\core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\dbRecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\dbSqlException;
+use CarloNicora\Minimalism\Services\MySQL\errors\errors;
 use JsonException;
 use mysqli;
 use mysqli_stmt;
 
 abstract class abstractDatabaseManager {
-    use logger;
-
     public const RECORD_STATUS_NEW = 1;
     public const RECORD_STATUS_UNCHANGED = 2;
     public const RECORD_STATUS_UPDATED = 3;
@@ -58,8 +55,6 @@ abstract class abstractDatabaseManager {
      * @throws serviceNotFoundException
      */
     public function __construct(servicesFactory $services) {
-        $this->loggerInitialise($services);
-
         $fullName = get_class($this);
         $fullNameParts = explode('\\', $fullName);
 

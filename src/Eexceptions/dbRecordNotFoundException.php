@@ -1,5 +1,5 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL\exceptions;
+namespace CarloNicora\Minimalism\Services\MySQL\Exceptions;
 
 use Exception;
 
