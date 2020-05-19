@@ -10,8 +10,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 
 class SQLExecutionFacadeTest extends AbstractTestCase
 {
-    /** @var MockObject|null|TableInterface  */
-    private ?MockObject $table=null;
 
     /** @var MockObject|mysqli|null  */
     private ?MockObject $mysqli=null;
@@ -23,13 +21,14 @@ class SQLExecutionFacadeTest extends AbstractTestCase
     {
         parent::setUp();
 
-        $this->table = $this->getMockBuilder(TableInterface::class)
+        /** @var MockObject|TableInterface $table */
+        $table = $this->getMockBuilder(TableInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->table->method('getDbToUse')->willReturn('mydb');
+        $table->method('getDbToUse')->willReturn('mydb');
 
-        $this->executor = new SQLExecutionFacade($this->services, $this->table);
+        $this->executor = new SQLExecutionFacade($this->services, $table);
 
         $this->mysqli = $this->getMockBuilder(mysqli::class)->getMock();
 

@@ -6,6 +6,7 @@ use CarloNicora\Minimalism\Services\MySQL\Factories\ServiceFactory;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use CarloNicora\Minimalism\Services\MySQL\Tests\Unit\Abstracts\AbstractTestCase;
 use CarloNicora\Minimalism\Services\MySQL\Tests\Unit\Mocks\tablename;
+use Exception;
 
 class MySQLTest extends AbstractTestCase
 {
@@ -33,12 +34,18 @@ class MySQLTest extends AbstractTestCase
         $this->MySQL = $this->services->loadService(ServiceFactory::class);
     }
 
-    public function testCreation()
+    /**
+     *
+     */
+    public function testCreation(): void
     {
         $MySQL = $this->services->loadService(ServiceFactory::class);
         $this->assertNotNull($MySQL);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testCreate() : void
     {
         $this->MySQL->create(tablename::class);

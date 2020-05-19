@@ -10,7 +10,7 @@ use CarloNicora\Minimalism\Services\MySQL\Configurations\DatabaseConfigurations;
 use CarloNicora\Minimalism\Services\MySQL\Events\MySQLErrorEvents;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use mysqli;
-use Throwable;
+use Exception;
 
 class MySQL extends abstractService {
     /** @var DatabaseConfigurations  */
@@ -32,7 +32,7 @@ class MySQL extends abstractService {
     /**
      * @param string $dbReader
      * @return TableInterface
-     * @throws Throwable|ConfigurationException
+     * @throws Exception|ConfigurationException
      */
     public function create(string $dbReader): TableInterface {
         if (array_key_exists($dbReader, $this->configData->tableManagers)) {

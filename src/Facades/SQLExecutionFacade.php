@@ -11,7 +11,7 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use JsonException;
 use mysqli;
 use mysqli_stmt;
-use Throwable;
+use Exception;
 
 class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInterface
 {
@@ -56,7 +56,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param string $sql
      * @param array $parameters
      * @return mysqli_stmt
-     * @throws Throwable|DbSqlException
+     * @throws Exception|DbSqlException
      */
     public function executeQuery(string $sql, array $parameters = []): mysqli_stmt {
         $statement = $this->prepareStatement($sql);
@@ -111,7 +111,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
 
     /**
      * @param bool $enabled
-     * @throws Throwable|DbSqlException
+     * @throws Exception|DbSqlException
      */
     public function toggleAutocommit(bool $enabled = true): void {
         if (false === $this->connection->autocommit($enabled)) {
@@ -125,7 +125,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
 
     /**
      * @param mysqli_stmt $statement
-     * @throws Throwable|DbSqlException
+     * @throws Exception|DbSqlException
      */
     public function closeStatement(mysqli_stmt $statement) : void {
         if (false === $statement->close()) {
@@ -138,7 +138,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     /**
      * @param string $sql
      * @return mysqli_stmt
-     * @throws Throwable|DbSqlException
+     * @throws Exception|DbSqlException
      */
     public function prepareStatement(string $sql): mysqli_stmt
     {

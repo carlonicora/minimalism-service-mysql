@@ -147,7 +147,7 @@ class SQLFunctionsFacadeTest extends AbstractTestCase
     }
 
     /**
-     * @throws DbSqlException
+     * @throws DbSqlException|DbRecordNotFoundException
      */
     public function testRunReadSingle() : void
     {
