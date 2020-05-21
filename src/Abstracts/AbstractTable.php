@@ -42,13 +42,13 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     protected string $insertIgnore = '';
 
     /** @var SQLExecutionFacadeInterface  */
-    private SQLExecutionFacadeInterface $executor;
+    protected SQLExecutionFacadeInterface $executor;
 
     /** @var SQLFunctionsFacadeInterface  */
-    private SQLFunctionsFacadeInterface $functions;
+    protected SQLFunctionsFacadeInterface $functions;
 
     /** @var SQLQueryCreationFacadeInterface  */
-    private SQLQueryCreationFacadeInterface $query;
+    protected SQLQueryCreationFacadeInterface $query;
 
     /**
      * AbstractTable constructor.
