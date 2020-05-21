@@ -18,10 +18,10 @@ use mysqli;
 abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 {
     /** @var string|null  */
-    private ?string $sql=null;
+    protected ?string $sql=null;
 
     /** @var array  */
-    private array $parameters=[];
+    protected array $parameters=[];
 
     /** @var string */
     protected ?string $autoIncrementField=null;
