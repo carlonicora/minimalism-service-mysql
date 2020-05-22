@@ -192,6 +192,7 @@ class SQLFunctionsFacadeTest extends AbstractTestCase
     }
 
     /**
+     * @throws DbRecordNotFoundException
      * @throws DbSqlException
      */
     public function testRunReadSingleNoResult() : void
@@ -229,6 +230,7 @@ class SQLFunctionsFacadeTest extends AbstractTestCase
     }
 
     /**
+     * @throws DbRecordNotFoundException
      * @throws DbSqlException
      */
     public function testRunReadSingleMultipleResults() : void
