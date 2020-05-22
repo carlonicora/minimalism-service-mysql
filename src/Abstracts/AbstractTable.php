@@ -73,7 +73,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
             $this->tableName = end($fullNameParts);
         }
 
-        if (!isset($this->dbToUse) && isset($fullNameParts[count($fullNameParts)-1]) && $fullNameParts[count($fullNameParts)-2] === 'tables'){
+        if (!isset($this->dbToUse) && isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
             $this->dbToUse = (string)$fullNameParts[count($fullNameParts)-3];
         }
 
