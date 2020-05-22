@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Services\Logger\Logger;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
@@ -50,12 +51,16 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /** @var SQLQueryCreationFacadeInterface  */
     protected SQLQueryCreationFacadeInterface $query;
 
+    /** @var Logger */
+    protected Logger $logger;
+
     /**
      * AbstractTable constructor.
      * @param ServicesFactory $services
      */
     public function __construct(ServicesFactory $services)
     {
+        $this->logger = $services->logger();
         $this->executor = new SQLExecutionFacade($services, $this);
         $this->functions = new SQLFunctionsFacade($this, $this->executor);
         $this->query = new SQLQueryCreationFacade($this);
