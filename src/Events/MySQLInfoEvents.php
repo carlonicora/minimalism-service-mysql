@@ -1,9 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Events;
 
-use CarloNicora\Minimalism\Services\Logger\LogMessages\InfoLogMessage;
+use CarloNicora\Minimalism\Core\Events\Abstracts\AbstractInfoEvent;
 
-class MySQLInfoEvents extends InfoLogMessage
+class MySQLInfoEvents extends AbstractInfoEvent
 {
     /** @var string  */
     protected string $serviceName = 'mysql';
