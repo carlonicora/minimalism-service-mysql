@@ -37,7 +37,7 @@ class RecordFacade implements RecordFacadeInterface
      */
     public static function setOriginalValues(&$record): void
     {
-        $originalValues = array();
+        $originalValues = [];
         foreach($record as $fieldName=>$fieldValue){
             $originalValues[$fieldName] = $fieldValue;
         }

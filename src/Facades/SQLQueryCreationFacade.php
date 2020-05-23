@@ -63,7 +63,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return array
      */
     public function generateSelectParameters(): array {
-        $response = array();
+        $response = [];
 
         $response[] = '';
 
@@ -180,7 +180,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return array
      */
     public function generateInsertParameters(): array {
-        $response = array();
+        $response = [];
 
         $response[] = '';
 
@@ -214,7 +214,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return array
      */
     public function generateDeleteParameters(): array {
-        $response = array();
+        $response = [];
 
         $response[] = '';
 
@@ -260,7 +260,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return array
      */
     public function generateUpdateParameters(): array {
-        $response = array();
+        $response = [];
 
         $response[] = '';
 

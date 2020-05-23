@@ -176,6 +176,20 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     }
 
     /**
+     * @param string $fieldName
+     * @param int $status
+     * @return bool
+     */
+    private function isTimingField(string $fieldName, int $status) : bool
+    {
+        $fieldFlags = $this->fields[$fieldName];
+        return
+            ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & TableInterface::TIME_CREATE))
+            ||
+            ($status === RecordFacade::RECORD_STATUS_UPDATED && ($fieldFlags & TableInterface::TIME_UPDATE));
+    }
+
+    /**
      * @param array $records
      * @param bool $delete
      * @throws DbSqlException
@@ -201,7 +215,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                 if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED) {
                     $oneSql .= $this->query->generateInsertOnDuplicateUpdateRecord($record);
 
-                    $records[$recordKey]['_sql'] = array();
+                    $records[$recordKey]['_sql'] = [];
                     $records[$recordKey]['_sql']['status'] = $status;
 
                     $parameters = [];
@@ -227,6 +241,11 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                         if (count($parameters) === 0){
                             $parameters[] = $parameter;
                         } elseif (array_key_exists($parameter, $record)){
+                            if ($status === RecordFacade::RECORD_STATUS_NEW || $status === RecordFacade::RECORD_STATUS_UPDATED){
+                                if ($this->isTimingField($parameter, $status)){
+                                    $record[$parameter] = date('Y-m-d H:i:s');
+                                }
+                            }
                             $parameters[] = $record[$parameter];
                         } else {
                             $parameters[] = null;
