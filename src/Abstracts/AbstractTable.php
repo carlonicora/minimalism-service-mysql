@@ -186,7 +186,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         return
             ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & TableInterface::TIME_CREATE))
             ||
-            ($status === RecordFacade::RECORD_STATUS_UPDATED && ($fieldFlags & TableInterface::TIME_UPDATE));
+            ($fieldFlags & TableInterface::TIME_UPDATE);
     }
 
     /**
