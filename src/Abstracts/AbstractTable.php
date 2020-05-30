@@ -319,4 +319,30 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         return $response;
     }
+
+    /**
+     * @param string $joinedTableName
+     * @param string $joinedTablePrimaryKeyName
+     * @param string $joinedTableForeignKeyName
+     * @param int $joinedTablePrimaryKeyValue
+     * @return array|null
+     * @throws DbSqlException
+     */
+    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array
+    {
+        if (count($this->primaryKey) > 1){
+            return null;
+        }
+
+        $primaryKey = array_key_first($this->primaryKey);
+
+        $this->sql = 'SELECT ' . $this->tableName . '.* '
+            . 'FROM ' . $this->tableName . ' '
+            . 'JOIN ' . $joinedTableName . ' ON ' . $this->tableName . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
+            . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?;';
+
+        $this->parameters = ['i', $joinedTablePrimaryKeyValue];
+
+        return $this->functions->runRead();
+    }
 }
