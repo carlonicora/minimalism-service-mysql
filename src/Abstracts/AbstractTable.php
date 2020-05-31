@@ -345,4 +345,18 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         return $this->functions->runRead();
     }
+
+    /**
+     * @param string $fieldName
+     * @param $fieldValue
+     * @return array
+     * @throws DbSqlException
+     */
+    public function loadByField(string $fieldName, $fieldValue) : array
+    {
+        $this->sql = 'SELECT * FROM ' . $this->tableName . ' WHERE ' . $fieldName . '=?;';
+        $this->parameters = [$this->query->convertFieldType($this->fields[$fieldName]), $fieldValue];
+
+        return $this->functions->runRead();
+    }
 }

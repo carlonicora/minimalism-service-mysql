@@ -79,4 +79,22 @@ interface TableInterface extends ConnectivityInterface
      * @throws DbSqlException
      */
     public function delete(array $records): void;
+
+    /**
+     * @param string $fieldName
+     * @param $fieldValue
+     * @return array
+     * @throws DbSqlException
+     */
+    public function loadByField(string $fieldName, $fieldValue) : array;
+
+    /**
+     * @param string $joinedTableName
+     * @param string $joinedTablePrimaryKeyName
+     * @param string $joinedTableForeignKeyName
+     * @param int $joinedTablePrimaryKeyValue
+     * @return array|null
+     * @throws DbSqlException
+     */
+    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array;
 }
