@@ -1,10 +1,12 @@
-<?php
+<?php /** @noinspection PhpPrivateFieldCanBeLocalVariableInspection */
+
 namespace CarloNicora\Minimalism\Services\MySQL\Tests\Unit;
 
 use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ServiceFactory;
 use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use CarloNicora\Minimalism\Services\MySQL\Tests\Unit\Abstracts\AbstractTestCase;
+use Exception;
 
 class MySQLTest extends AbstractTestCase
 {
@@ -33,7 +35,7 @@ class MySQLTest extends AbstractTestCase
     }
 
     /**
-     *
+     * @throws Exception
      */
     public function testCreation(): void
     {

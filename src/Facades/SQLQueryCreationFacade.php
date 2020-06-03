@@ -21,8 +21,40 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
+    public function generateSelectStatementInitial() : string
+    {
+        return 'SELECT * FROM ' . $this->table->getTableName();
+    }
+
+    /**
+     * @return string
+     */
+    public function generateInsertStatementInitial(): string
+    {
+        return 'INSERT INTO ' . $this->table->getTableName();
+    }
+
+    /**
+     * @return string
+     */
+    public function generateUpdateStatementInitial(): string
+    {
+        return 'UPDATE ' . $this->table->getTableName() . ' SET ';
+    }
+
+    /**
+     * @return string
+     */
+    public function generateDeleteStatementInitial(): string
+    {
+        return 'DELECT FROM ' . $this->table->getTableName();
+    }
+
+    /**
+     * @return string
+     */
     public function generateSelectStatement(): string {
-        $response = 'SELECT * FROM ' . $this->table->getTableName() ;
+        $response = $this->generateSelectStatementInitial();
 
         if ($this->table->getPrimaryKey() !== null) {
             $response .= ' WHERE ';
@@ -94,7 +126,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateInsertOnDuplicateUpdateStart(): string {
-        $response = 'INSERT INTO ' . $this->table->getTableName() . ' (';
+        $response = $this->generateInsertStatementInitial() . ' (';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
             $response .= $fieldName . ',';
@@ -197,7 +229,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateDeleteStatement(): string {
-        $response = 'DELETE FROM ' . $this->table->getTableName() . ' WHERE ';
+        $response = $this->generateDeleteStatementInitial() . ' WHERE ';
 
         foreach ($this->table->getPrimaryKey() as $fieldName=>$fieldType){
             $response .= $fieldName . '=? AND ';
@@ -231,7 +263,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateUpdateStatement(): string {
-        $response = 'UPDATE ' . $this->table->getTableName() . ' SET ';
+        $response = $this->generateUpdateStatementInitial();
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
             if (!array_key_exists($fieldName, $this->table->getPrimaryKey() ?? [])){

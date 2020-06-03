@@ -14,6 +14,7 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use Exception;
 use mysqli;
 
 abstract class AbstractTable implements TableInterface, GenericQueriesInterface
@@ -57,6 +58,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /**
      * AbstractTable constructor.
      * @param ServicesFactory $services
+     * @throws Exception
      */
     public function __construct(ServicesFactory $services)
     {

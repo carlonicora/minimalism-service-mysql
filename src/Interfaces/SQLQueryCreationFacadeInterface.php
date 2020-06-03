@@ -12,6 +12,26 @@ interface SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
+    public function generateSelectStatementInitial() : string;
+
+    /**
+     * @return string
+     */
+    public function generateInsertStatementInitial(): string;
+
+    /**
+     * @return string
+     */
+    public function generateUpdateStatementInitial(): string;
+
+    /**
+     * @return string
+     */
+    public function generateDeleteStatementInitial(): string;
+
+    /**
+     * @return string
+     */
     public function generateSelectStatement(): string;
 
     /**
