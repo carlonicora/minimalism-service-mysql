@@ -47,7 +47,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function DELETE(): string
     {
-        return 'DELECT FROM ' . $this->table->getTableName();
+        return 'DELETE FROM ' . $this->table->getTableName();
     }
 
     /**
