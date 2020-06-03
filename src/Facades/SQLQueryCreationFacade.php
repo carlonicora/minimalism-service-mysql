@@ -21,7 +21,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateSelectStatementInitial() : string
+    public function SELECT() : string
     {
         return 'SELECT * FROM ' . $this->table->getTableName();
     }
@@ -29,7 +29,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertStatementInitial(): string
+    public function INSERT(): string
     {
         return 'INSERT INTO ' . $this->table->getTableName();
     }
@@ -37,7 +37,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateUpdateStatementInitial(): string
+    public function UPDATE(): string
     {
         return 'UPDATE ' . $this->table->getTableName() . ' SET ';
     }
@@ -45,7 +45,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateDeleteStatementInitial(): string
+    public function DELETE(): string
     {
         return 'DELECT FROM ' . $this->table->getTableName();
     }
@@ -54,7 +54,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateSelectStatement(): string {
-        $response = $this->generateSelectStatementInitial();
+        $response = $this->SELECT();
 
         if ($this->table->getPrimaryKey() !== null) {
             $response .= ' WHERE ';
@@ -126,7 +126,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateInsertOnDuplicateUpdateStart(): string {
-        $response = $this->generateInsertStatementInitial() . ' (';
+        $response = $this->INSERT() . ' (';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
             $response .= $fieldName . ',';
@@ -229,7 +229,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateDeleteStatement(): string {
-        $response = $this->generateDeleteStatementInitial() . ' WHERE ';
+        $response = $this->DELETE() . ' WHERE ';
 
         foreach ($this->table->getPrimaryKey() as $fieldName=>$fieldType){
             $response .= $fieldName . '=? AND ';
@@ -263,7 +263,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateUpdateStatement(): string {
-        $response = $this->generateUpdateStatementInitial();
+        $response = $this->UPDATE();
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
             if (!array_key_exists($fieldName, $this->table->getPrimaryKey() ?? [])){
