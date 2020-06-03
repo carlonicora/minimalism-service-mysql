@@ -27,6 +27,11 @@ interface SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
+    public function COUNT(): string;
+
+    /**
+     * @return string
+     */
     public function DELETE(): string;
 
     /**

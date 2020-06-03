@@ -53,6 +53,14 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
+    public function COUNT(): string
+    {
+        return 'SELECT count(*) AS counter FROM ' . $this->table->getTableName();
+    }
+
+    /**
+     * @return string
+     */
     public function generateSelectStatement(): string {
         $response = $this->SELECT();
 
