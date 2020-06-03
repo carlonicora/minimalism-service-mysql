@@ -39,7 +39,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function UPDATE(): string
     {
-        return 'UPDATE ' . $this->table->getTableName() . ' SET ';
+        return 'UPDATE ' . $this->table->getTableName() . ' SET';
     }
 
     /**
