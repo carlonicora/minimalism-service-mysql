@@ -271,7 +271,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @return string
      */
     public function generateUpdateStatement(): string {
-        $response = $this->UPDATE();
+        $response = $this->UPDATE() . ' ';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
             if (!array_key_exists($fieldName, $this->table->getPrimaryKey() ?? [])){
