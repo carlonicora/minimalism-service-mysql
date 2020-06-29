@@ -57,6 +57,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param array $parameters
      * @return mysqli_stmt
      * @throws Exception|DbSqlException
+     * @noinspection PhpRedundantCatchClauseInspection
      */
     public function executeQuery(string $sql, array $parameters = []): mysqli_stmt {
         $statement = $this->prepareStatement($sql);

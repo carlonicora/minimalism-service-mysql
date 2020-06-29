@@ -244,6 +244,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                             $parameters[] = $parameter;
                         } elseif (array_key_exists($parameter, $record)){
                             if ($status === RecordFacade::RECORD_STATUS_NEW || $status === RecordFacade::RECORD_STATUS_UPDATED){
+                                /** @noinspection NotOptimalIfConditionsInspection */
                                 if ($this->isTimingField($parameter, $status)){
                                     $record[$parameter] = date('Y-m-d H:i:s');
                                 }
