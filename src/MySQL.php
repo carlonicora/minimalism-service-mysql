@@ -1,22 +1,20 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL;
+namespace CarloNicora\Minimalism\Services\MySQL;
 
-use carlonicora\minimalism\core\services\exceptions\configurationException;
-use carlonicora\minimalism\core\services\abstracts\abstractService;
-use carlonicora\minimalism\core\services\exceptions\serviceNotFoundException;
-use carlonicora\minimalism\core\services\factories\servicesFactory;
-use carlonicora\minimalism\core\services\interfaces\serviceConfigurationsInterface;
-use carlonicora\minimalism\services\logger\traits\logger;
-use carlonicora\minimalism\services\MySQL\abstracts\abstractDatabaseManager;
-use carlonicora\minimalism\services\MySQL\configurations\databaseConfigurations;
-use carlonicora\minimalism\services\MySQL\errors\errors;
+use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
+use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
+use CarloNicora\Minimalism\Core\Services\Exceptions\ServiceNotFoundException;
+use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
+use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
+use CarloNicora\Minimalism\Services\MySQL\Configurations\DatabaseConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\Events\MySQLErrorEvents;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use mysqli;
+use Exception;
 
 class MySQL extends abstractService {
-    use logger;
-
-    /** @var databaseConfigurations  */
-    private databaseConfigurations $configData;
+    /** @var DatabaseConfigurations  */
+    private DatabaseConfigurations $configData;
 
     /**
      * abstractApiCaller constructor.
@@ -29,31 +27,27 @@ class MySQL extends abstractService {
 
         /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
         $this->configData = $configData;
-
-        $this->loggerInitialise($services);
     }
 
     /**
      * @param string $dbReader
-     * @return abstractDatabaseManager
-     * @throws configurationException
+     * @return TableInterface
+     * @throws Exception|ConfigurationException
      */
-    public function create(string $dbReader): abstractDatabaseManager {
+    public function create(string $dbReader): TableInterface {
         if (array_key_exists($dbReader, $this->configData->tableManagers)) {
             return $this->configData->tableManagers[$dbReader];
         }
 
         if (!class_exists($dbReader)) {
-            $this->loggerWriteError(
-                errors::ERROR_READER_CLASS_NOT_FOUND,
-                'Database reader class ' . $dbReader . ' does not exist.',
-                errors::LOGGER_SERVICE_NAME
-            );
-            throw new configurationException(self::class, 'reader class missing', errors::ERROR_READER_CLASS_NOT_FOUND);
+            $this->services->logger()->error()
+                ->log(MySQLErrorEvents::ERROR_READER_CLASS_NOT_FOUND($dbReader))
+                ->throw(ConfigurationException::class, 'Reader class missing');
         }
 
-        /** @var abstractDatabaseManager $response */
+        /** @var TableInterface $response */
         $response = new $dbReader($this->services);
+        $response->initialiseAttributes();
 
         $databaseName = $response->getDbToUse();
         $connection = $this->configData->getDatabase($databaseName);
@@ -62,12 +56,9 @@ class MySQL extends abstractService {
             $dbConf = $this->configData->getDatabaseConnectionString($databaseName);
 
             if (empty($dbConf)) {
-                $this->loggerWriteError(
-                    errors::ERROR_MISSING_CONNECTION_DETAILS,
-                    'Missing connection details for ' . $databaseName,
-                    errors::LOGGER_SERVICE_NAME
-                );
-                throw new configurationException(self::class, 'connection details missing', errors::ERROR_MISSING_CONNECTION_DETAILS);
+                $this->services->logger()->error()
+                    ->log(MySQLErrorEvents::ERROR_MISSING_CONNECTION_DETAILS($databaseName))
+                    ->throw(ConfigurationException::class, 'Connection details missing');
             }
 
             $connection = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
@@ -75,12 +66,9 @@ class MySQL extends abstractService {
             $connection->connect($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
             if ($connection->connect_errno) {
-                $this->loggerWriteError(
-                    errors::ERROR_CONNECTION_ERROR,
-                    $databaseName . '  database connection error ' . $connection->connect_error . ': ' . $connection->connect_error,
-                    errors::LOGGER_SERVICE_NAME
-                );
-                throw new configurationException(self::class, 'error connecting to the database',errors::ERROR_CONNECTION_ERROR);
+                $this->services->logger()->error()
+                    ->log(MySQLErrorEvents::ERROR_CONNECTION_ERROR($databaseName, $connection->connect_errno, $connection->connect_error))
+                    ->throw(ConfigurationException::class, 'Error connecting to the database');
             }
 
             $connection->set_charset('utf8mb4');

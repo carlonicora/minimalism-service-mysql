@@ -1,10 +1,10 @@
 <?php
-namespace carlonicora\minimalism\services\MySQL\configurations;
+namespace CarloNicora\Minimalism\Services\MySQL\Configurations;
 
-use carlonicora\minimalism\core\services\abstracts\abstractServiceConfigurations;
+use CarloNicora\Minimalism\core\Services\Abstracts\AbstractServiceConfigurations;
 use mysqli;
 
-class databaseConfigurations extends abstractServiceConfigurations {
+class DatabaseConfigurations extends abstractServiceConfigurations {
     /** @var array */
     private array $databases = [];
 

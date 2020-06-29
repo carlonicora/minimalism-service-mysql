@@ -1,9 +1,15 @@
 version: '3.7'
 
 services:
-  minimalism-service-MySQL:
-    container_name: minimalism-service-MySQL
-    image: carlonicora/php-cli-base:7.4.3.2
+  minimalism-service-mysql:
+    container_name: minimalism-service-mysql
+    image: carlonicora/minimalism-service-mysql:2.0.0
+    build:
+      context: .
+      dockerfile: ./php-cli/Dockerfile
+      args:
+        - XDEBUG_HOST=${XDEBUG_HOST}
+        - XDEBUG_PORT=${XDEBUG_PORT}
     working_dir: /app
     volumes:
       - ../:/app
