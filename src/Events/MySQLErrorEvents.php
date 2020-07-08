@@ -4,6 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Events;
 use CarloNicora\Minimalism\Core\Events\Abstracts\AbstractErrorEvent;
 use CarloNicora\Minimalism\Core\Events\Interfaces\EventInterface;
 use CarloNicora\Minimalism\Core\Modules\Interfaces\ResponseInterface;
+use mysqli_stmt;
 
 class MySQLErrorEvents extends AbstractErrorEvent
 {
@@ -45,8 +46,14 @@ class MySQLErrorEvents extends AbstractErrorEvent
         return new self(7, ResponseInterface::HTTP_STATUS_500, 'MySQL statement (%s) preparation failed. Error %s %s: %s', [$sql, $errorNumber, $sqlState, $error]);
     }
 
-    public static function ERROR_STATEMENT_EXECUTION(string $sql, string $parameters) : EventInterface
+    public static function ERROR_STATEMENT_EXECUTION(string $sql, string $parameters, mysqli_stmt $statement) : EventInterface
     {
-        return new self(8, ResponseInterface::HTTP_STATUS_500, 'MySQL statement (%s) execution (%s) failed.', [$sql, $parameters]);
+        $errorDetails = [];
+        foreach ($statement->error_list as $error) {
+            $errorDetails []= sprintf('Error %s %s: %s', $error['errno'], $error['sqlstate'], $error['error']);
+        }
+
+        $message = 'MySQL statement execution failed. %s Query: %s Parameters %s';
+        return new self(8, ResponseInterface::HTTP_STATUS_500, $message, [implode('.', $errorDetails), $sql, $parameters]);
     }
 }

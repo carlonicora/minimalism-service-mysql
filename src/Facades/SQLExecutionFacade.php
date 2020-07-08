@@ -73,8 +73,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
                 $jsonParameters = '';
             }
             $this->services->logger()->error()
-                ->log(MySQLErrorEvents::ERROR_STATEMENT_EXECUTION($sql, $jsonParameters))
-                ->throw(DbSqlException::class, 'MySQL statement execution failed.');
+                ->log(MySQLErrorEvents::ERROR_STATEMENT_EXECUTION($sql, $jsonParameters, $statement))
+                ->throw(DbSqlException::class, 'MySQL statement execution failed.' );
         }
 
         return $statement;
