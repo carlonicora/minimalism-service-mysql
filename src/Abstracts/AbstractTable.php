@@ -25,13 +25,13 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /** @var array  */
     protected array $parameters=[];
 
-    /** @var string */
+    /** @var string|null */
     protected ?string $autoIncrementField=null;
 
     /** @var array */
     protected array $fields;
 
-    /** @var array */
+    /** @var array|null */
     protected ?array $primaryKey;
 
     /** @var string */
