@@ -264,6 +264,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
             $oneSql .= $this->query->generateInsertOnDuplicateUpdateEnd();
 
             if ($onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
+                $this->parameters = [];
                 $this->sql = $oneSql;
                 $this->functions->runSql();
             } else {
