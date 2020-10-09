@@ -43,14 +43,14 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /** @var string */
     protected string $insertIgnore = '';
 
-    /** @var SQLExecutionFacadeInterface|null  */
-    protected ?SQLExecutionFacadeInterface $executor=null;
+    /** @var SQLExecutionFacadeInterface  */
+    protected SQLExecutionFacadeInterface $executor;
 
-    /** @var SQLFunctionsFacadeInterface|null  */
-    protected ?SQLFunctionsFacadeInterface $functions=null;
+    /** @var SQLFunctionsFacadeInterface  */
+    protected SQLFunctionsFacadeInterface $functions;
 
-    /** @var SQLQueryCreationFacadeInterface|null  */
-    protected ?SQLQueryCreationFacadeInterface $query=null;
+    /** @var SQLQueryCreationFacadeInterface  */
+    protected SQLQueryCreationFacadeInterface $query;
 
     /** @var Logger */
     protected Logger $logger;
@@ -66,14 +66,6 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         $this->executor = new SQLExecutionFacade($services, $this);
         $this->functions = new SQLFunctionsFacade($this, $this->executor);
         $this->query = new SQLQueryCreationFacade($this);
-    }
-
-    /**
-     *
-     */
-    public function __destruct()
-    {
-        unset($this->executor, $this->functions, $this->query);
     }
 
     /**
@@ -248,13 +240,18 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                     }
 
                     foreach ($parametersToUse as $parameter){
-                        if (count($parameters) === 0) {
+                        if (count($parameters) === 0){
                             $parameters[] = $parameter;
-                        } elseif ($this->isTimingField($parameter, $status)){
+                        } elseif (array_key_exists($parameter, $record)){
                             if ($status === RecordFacade::RECORD_STATUS_NEW || $status === RecordFacade::RECORD_STATUS_UPDATED){
-                                $record[$parameter] = date('Y-m-d H:i:s');
+                                if ($this->isTimingField($parameter, $status)){
+                                    $record[$parameter] = date('Y-m-d H:i:s');
+                                }
                             }
                             $parameters[] = $record[$parameter];
+                        } elseif ($this->isTimingField($parameter, $status)){
+                            $record[$parameter] = date('Y-m-d H:i:s');
+                            $parameters[] = date('Y-m-d H:i:s');
                         } else {
                             $parameters[] = null;
                         }

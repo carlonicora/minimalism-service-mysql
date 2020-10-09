@@ -18,8 +18,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     /** @var ServicesFactory  */
     private ServicesFactory $services;
 
-    /** @var mysqli|null */
-    private ?mysqli $connection=null;
+    /** @var mysqli */
+    private mysqli $connection;
 
     /** @var TableInterface  */
     private TableInterface $table;
@@ -33,14 +33,6 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     {
         $this->services = $services;
         $this->table = $table;
-    }
-
-    /**
-     *
-     */
-    public function __destruct()
-    {
-        $this->connection = null;
     }
 
     /**
