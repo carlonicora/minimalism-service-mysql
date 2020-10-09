@@ -2,9 +2,10 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Configurations;
 
 use CarloNicora\Minimalism\core\Services\Abstracts\AbstractServiceConfigurations;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use mysqli;
 
-class DatabaseConfigurations extends abstractServiceConfigurations {
+class DatabaseConfigurations extends AbstractServiceConfigurations {
     /** @var array */
     private array $databases = [];
 
@@ -38,7 +39,7 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      * @param string $databaseName
      * @return mysqli|null
      */
-    public function getDatabase($databaseName): ?mysqli {
+    public function getDatabase(string $databaseName): ?mysqli {
         $response = null;
 
         if ($this->databases !== null && array_key_exists($databaseName, $this->databases)){
@@ -52,7 +53,7 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      * @param string $databaseName
      * @return null|array
      */
-    public function getDatabaseConnectionString($databaseName): ?array {
+    public function getDatabaseConnectionString(string $databaseName): ?array {
         $response = null;
 
         if ($this->databaseConnectionStrings !== null && array_key_exists($databaseName, $this->databaseConnectionStrings)){
@@ -66,7 +67,7 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      * @param string $databaseName
      * @param mysqli $database
      */
-    public function setDatabase($databaseName, $database): void {
+    public function setDatabase(string $databaseName, mysqli $database): void {
         $this->databases[$databaseName] = $database;
     }
 
@@ -74,6 +75,17 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      *
      */
     public function resetDatabases() : void {
+        /** @var mysqli $database */
+        foreach ($this->databases as $database){
+            $database->close();
+            unset($database);
+        }
+
+        /** @var TableInterface $tableManager */
+        foreach ($this->tableManagers as $tableManager){
+            unset($tableManager);
+        }
+
         $this->databases = [];
         $this->tableManagers = [];
     }
