@@ -166,7 +166,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
             }
 
             if ($fieldValue !== 'NULL' && ($fieldType === 's' || $fieldType === 'b')){
-                $response .= '\'' . $fieldValue . '\',';
+                $response .= '\'' . str_replace('\'', '\\\'', $fieldValue) . '\',';
             } else {
                 $response .= $fieldValue . ',';
             }
