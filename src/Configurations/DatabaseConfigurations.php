@@ -38,7 +38,7 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      * @param string $databaseName
      * @return mysqli|null
      */
-    public function getDatabase($databaseName): ?mysqli {
+    public function getDatabase(string $databaseName): ?mysqli {
         $response = null;
 
         if ($this->databases !== null && array_key_exists($databaseName, $this->databases)){
@@ -52,7 +52,7 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      * @param string $databaseName
      * @return null|array
      */
-    public function getDatabaseConnectionString($databaseName): ?array {
+    public function getDatabaseConnectionString(string $databaseName): ?array {
         $response = null;
 
         if ($this->databaseConnectionStrings !== null && array_key_exists($databaseName, $this->databaseConnectionStrings)){
@@ -66,7 +66,7 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      * @param string $databaseName
      * @param mysqli $database
      */
-    public function setDatabase($databaseName, $database): void {
+    public function setDatabase(string $databaseName, mysqli $database): void {
         $this->databases[$databaseName] = $database;
     }
 
