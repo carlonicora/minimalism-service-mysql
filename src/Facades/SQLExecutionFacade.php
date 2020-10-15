@@ -84,7 +84,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param array $parameters
      * @param int $retry
      * @return mysqli_stmt
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function executeQuery(string $sql, array $parameters = [], int $retry=0): mysqli_stmt
     {
@@ -95,7 +95,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         }
 
         if (false === $statement->execute()) {
-            if ($retry<10 && $this->connection->errno=1213){
+            if ($retry<10 && $this->connection->errno===1213){
                 $retry++;
                 usleep(100000);
                 $this->executeQuery($sql, $parameters, $retry);
