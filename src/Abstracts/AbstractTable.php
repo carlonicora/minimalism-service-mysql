@@ -252,6 +252,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                         } else {
                             if ($this->isTimingField($parameter, $status)) {
                                 $record[$parameter] = date('Y-m-d H:i:s');
+                                $parameters[] = $record[$parameter];
                             } else {
                                 $parameters[] = null;
                             }
