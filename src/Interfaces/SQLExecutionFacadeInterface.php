@@ -27,10 +27,11 @@ interface SQLExecutionFacadeInterface
     /**
      * @param string $sql
      * @param array $parameters
+     * @param int $retry
      * @return mysqli_stmt
      * @throws DbSqlException
      */
-    public function executeQuery(string $sql, array $parameters = []): mysqli_stmt;
+    public function executeQuery(string $sql, array $parameters = [], int $retry=0): mysqli_stmt;
 
     /**
      *

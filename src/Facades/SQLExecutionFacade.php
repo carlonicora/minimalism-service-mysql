@@ -82,10 +82,11 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     /**
      * @param string $sql
      * @param array $parameters
+     * @param int $retry
      * @return mysqli_stmt
-     * @throws Exception|DbSqlException
+     * @throws DbSqlException
      */
-    public function executeQuery(string $sql, array $parameters = []): mysqli_stmt
+    public function executeQuery(string $sql, array $parameters = [], int $retry=0): mysqli_stmt
     {
         $statement = $this->prepareStatement($sql);
 
@@ -94,14 +95,19 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         }
 
         if (false === $statement->execute()) {
-            try {
-                $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR, 512);
-            } catch (JsonException $e) {
-                $jsonParameters = '';
+            if ($retry<10 && $this->connection->errno=1213){
+                $retry++;
+                $this->executeQuery($sql, $parameters, $retry);
+            } else {
+                try {
+                    $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR, 512);
+                } catch (JsonException $e) {
+                    $jsonParameters = '';
+                }
+                $this->services->logger()->error()
+                    ->log(MySQLErrorEvents::ERROR_STATEMENT_EXECUTION($sql, $jsonParameters, $statement->errno, $statement->error))
+                    ->throw(DbSqlException::class, 'MySQL statement execution failed.');
             }
-            $this->services->logger()->error()
-                ->log(MySQLErrorEvents::ERROR_STATEMENT_EXECUTION($sql, $jsonParameters, $statement->errno, $statement->error))
-                ->throw(DbSqlException::class, 'MySQL statement execution failed.');
         }
 
         return $statement;
