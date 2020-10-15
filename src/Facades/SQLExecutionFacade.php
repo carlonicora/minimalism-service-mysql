@@ -97,6 +97,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         if (false === $statement->execute()) {
             if ($retry<10 && $this->connection->errno=1213){
                 $retry++;
+                usleep(100000);
                 $this->executeQuery($sql, $parameters, $retry);
             } else {
                 try {
