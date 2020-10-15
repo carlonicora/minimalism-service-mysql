@@ -58,7 +58,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     public function keepaliveConnection(): void
     {
         if (!$this->connection->ping()){
-            $this->mysql->connect($this->databaseName);
+            $this->connection = $this->mysql->connect($this->databaseName);
         }
     }
 
