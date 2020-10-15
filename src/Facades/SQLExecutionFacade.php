@@ -8,6 +8,7 @@ use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\ConnectivityInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\MySQL;
 use JsonException;
 use mysqli;
 use mysqli_stmt;
@@ -18,21 +19,47 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     /** @var ServicesFactory  */
     private ServicesFactory $services;
 
+    /** @var MySQL  */
+    private MySQL $mysql;
+
     /** @var mysqli */
     private mysqli $connection;
 
     /** @var TableInterface  */
     private TableInterface $table;
 
+    /** @var string|null  */
+    private ?string $databaseName=null;
+
     /**
      * SQLExecutionFacade constructor.
      * @param ServicesFactory $services
      * @param TableInterface $table
+     * @throws Exception
      */
     public function __construct(ServicesFactory $services, TableInterface $table)
     {
         $this->services = $services;
+        $this->mysql = $this->services->service(MySQL::class);
         $this->table = $table;
+    }
+
+    /**
+     * @param string $databaseName
+     */
+    public function setDatabaseName(string $databaseName): void
+    {
+        $this->databaseName = $databaseName;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function keepaliveConnection(): void
+    {
+        if (!$this->connection->ping()){
+            $this->mysql->connect($this->databaseName);
+        }
     }
 
     /**
@@ -58,7 +85,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @return mysqli_stmt
      * @throws Exception|DbSqlException
      */
-    public function executeQuery(string $sql, array $parameters = []): mysqli_stmt {
+    public function executeQuery(string $sql, array $parameters = []): mysqli_stmt
+    {
         $statement = $this->prepareStatement($sql);
 
         if (false === empty($parameters)) {
@@ -100,7 +128,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param mysqli_stmt $statement
      * @return string
      */
-    public function getStatementErrors(mysqli_stmt $statement): string {
+    public function getStatementErrors(mysqli_stmt $statement): string
+    {
         $errorDetails = 'Error ' . $statement->errno . ' ' . $statement->sqlstate . ': ' . $statement->error . PHP_EOL;
         foreach ($statement->error_list as $error) {
             $errorDetails .= 'Error ' . $error['errno'] . ' ' . $error['sqlstate'] . ': ' . $error['error'] . PHP_EOL;
@@ -113,7 +142,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param bool $enabled
      * @throws Exception|DbSqlException
      */
-    public function toggleAutocommit(bool $enabled = true): void {
+    public function toggleAutocommit(bool $enabled = true): void
+    {
         if (false === $this->connection->autocommit($enabled)) {
             $this->services->logger()->error()
                 ->log($enabled
@@ -127,7 +157,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param mysqli_stmt $statement
      * @throws Exception|DbSqlException
      */
-    public function closeStatement(mysqli_stmt $statement) : void {
+    public function closeStatement(mysqli_stmt $statement) : void
+    {
         if (false === $statement->close()) {
             $this->services->logger()->error()
                 ->log(MySQLErrorEvents::ERROR_CLOSE_STATEMENT($this->getStatementErrors($statement)))
@@ -157,7 +188,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      * @param $arr
      * @return array
      */
-    private function refValues($arr): array {
+    private function refValues($arr): array
+    {
         $refs = [];
 
         foreach ($arr as $key => $value) {

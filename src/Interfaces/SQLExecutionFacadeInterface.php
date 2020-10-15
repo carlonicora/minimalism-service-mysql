@@ -15,6 +15,16 @@ interface SQLExecutionFacadeInterface
     public function __construct(ServicesFactory $services, TableInterface $table);
 
     /**
+     * @param string $databaseName
+     */
+    public function setDatabaseName(string $databaseName): void;
+
+    /**
+     *
+     */
+    public function keepaliveConnection(): void;
+
+    /**
      * @param string $sql
      * @param array $parameters
      * @return mysqli_stmt

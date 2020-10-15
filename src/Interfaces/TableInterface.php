@@ -28,9 +28,9 @@ interface TableInterface extends ConnectivityInterface
     public function __construct(servicesFactory $services);
 
     /**
-     *
+     * @param array $connectionParameters
      */
-    public function initialiseAttributes() : void;
+    public function initialiseAttributes(array $connectionParameters=[]) : void;
 
     /**
      * @return string

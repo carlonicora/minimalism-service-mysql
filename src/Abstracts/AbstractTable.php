@@ -69,9 +69,9 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     }
 
     /**
-     *
+     * @param array $connectionParameters
      */
-    public function initialiseAttributes() : void
+    public function initialiseAttributes(array $connectionParameters=[]) : void
     {
         $fullName = get_class($this);
         $fullNameParts = explode('\\', $fullName);
@@ -83,6 +83,8 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         if (!isset($this->dbToUse) && isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
             $this->dbToUse = (string)$fullNameParts[count($fullNameParts)-3];
         }
+
+        $this->executor->setDatabaseName($this->dbToUse);
 
         if (!isset($this->primaryKey)){
             foreach ($this->fields as $fieldName=>$fieldFlags){
@@ -240,18 +242,11 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                     }
 
                     foreach ($parametersToUse as $parameter){
-                        if (count($parameters) === 0){
+                        if (count($parameters) === 0) {
                             $parameters[] = $parameter;
-                        } elseif (array_key_exists($parameter, $record)){
-                            if ($status === RecordFacade::RECORD_STATUS_NEW || $status === RecordFacade::RECORD_STATUS_UPDATED){
-                                if ($this->isTimingField($parameter, $status)){
-                                    $record[$parameter] = date('Y-m-d H:i:s');
-                                }
-                            }
-                            $parameters[] = $record[$parameter];
-                        } elseif ($this->isTimingField($parameter, $status)){
+                        } elseif ($this->isTimingField($parameter, $status)) {
                             $record[$parameter] = date('Y-m-d H:i:s');
-                            $parameters[] = date('Y-m-d H:i:s');
+                            $parameters[] = $record[$parameter];
                         } else {
                             $parameters[] = null;
                         }

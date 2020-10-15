@@ -30,6 +30,7 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
      * @throws DbSqlException
      */
     public function runSql(): void {
+        $this->executor->keepaliveConnection();
         try {
             $this->executor->toggleAutocommit(false);
             $statement = $this->executor->executeQuery($this->table->getSql(), $this->table->getParameters());
@@ -46,6 +47,8 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
      * @throws DbSqlException
      */
     public function runRead(): array {
+        $this->executor->keepaliveConnection();
+
         $response = [];
 
         $statement = $this->executor->executeQuery($this->table->getSql(), $this->table->getParameters());
@@ -87,6 +90,8 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
      * @throws DbSqlException
      */
     public function runUpdate(array &$objects): void {
+        $this->executor->keepaliveConnection();
+
         try {
             $this->executor->toggleAutocommit(false);
 

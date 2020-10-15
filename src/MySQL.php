@@ -53,32 +53,44 @@ class MySQL extends abstractService {
         $connection = $this->configData->getDatabase($databaseName);
 
         if (!isset($connection)) {
-            $dbConf = $this->configData->getDatabaseConnectionString($databaseName);
-
-            if (empty($dbConf)) {
-                $this->services->logger()->error()
-                    ->log(MySQLErrorEvents::ERROR_MISSING_CONNECTION_DETAILS($databaseName))
-                    ->throw(ConfigurationException::class, 'Connection details missing');
-            }
-
-            $connection = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
-
-            $connection->connect($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
-
-            if ($connection->connect_errno) {
-                $this->services->logger()->error()
-                    ->log(MySQLErrorEvents::ERROR_CONNECTION_ERROR($databaseName, $connection->connect_errno, $connection->connect_error))
-                    ->throw(ConfigurationException::class, 'Error connecting to the database');
-            }
-
-            $connection->set_charset('utf8mb4');
-
-            $this->configData->setDatabase($databaseName, $connection);
+            $connection = $this->connect($databaseName);
         }
 
         $response->setConnection($connection);
 
         $this->configData->tableManagers[$dbReader] = $response;
+
+        return $response;
+    }
+
+    /**
+     * @param string $databaseName
+     * @return mysqli
+     * @throws Exception
+     */
+    public function connect(string $databaseName): mysqli
+    {
+        $dbConf = $this->configData->getDatabaseConnectionString($databaseName);
+
+        if (empty($dbConf)) {
+            $this->services->logger()->error()
+                ->log(MySQLErrorEvents::ERROR_MISSING_CONNECTION_DETAILS($databaseName))
+                ->throw(ConfigurationException::class, 'Connection details missing');
+        }
+
+        $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
+
+        $response->connect($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
+
+        if ($response->connect_errno) {
+            $this->services->logger()->error()
+                ->log(MySQLErrorEvents::ERROR_CONNECTION_ERROR($databaseName, $response->connect_errno, $response->connect_error))
+                ->throw(ConfigurationException::class, 'Error connecting to the database');
+        }
+
+        $response->set_charset('utf8mb4');
+
+        $this->configData->setDatabase($databaseName, $response);
 
         return $response;
     }
