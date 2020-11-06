@@ -307,6 +307,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      */
     public function loadAll(): array {
         $this->sql = 'SELECT * FROM ' . $this->tableName . ';';
+        $this->parameters = [];
 
         return $this->functions->runRead();
     }
@@ -317,6 +318,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      */
     public function count(): int {
         $this->sql = 'SELECT count(*) as counter FROM ' . $this->tableName . ';';
+        $this->parameters = [];
 
         try {
             $responseArray = $this->functions->runReadSingle();
