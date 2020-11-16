@@ -57,6 +57,7 @@ class MySQL extends abstractService {
         }
 
         $response->setConnection($connection);
+        $this->configData->setDatabase($databaseName, $connection);
 
         $this->configData->tableManagers[$dbReader] = $response;
 
