@@ -64,6 +64,14 @@ class MySQL extends abstractService {
     }
 
     /**
+     *
+     */
+    public function resetDatabases(): void
+    {
+        $this->configData->resetDatabases();
+    }
+
+    /**
      * @param string $databaseName
      * @return mysqli
      * @throws Exception
