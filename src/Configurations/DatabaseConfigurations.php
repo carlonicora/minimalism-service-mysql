@@ -74,6 +74,16 @@ class DatabaseConfigurations extends abstractServiceConfigurations {
      *
      */
     public function resetDatabases() : void {
+        /**
+         * @var string $databaseKey
+         * @var mysqli $connection
+         */
+        foreach ($this->databases as $databaseKey=>$connection){
+            if ($connection !== null && $connection->ping()){
+                $connection->close();
+            }
+        }
+
         $this->databases = [];
         $this->tableManagers = [];
     }
