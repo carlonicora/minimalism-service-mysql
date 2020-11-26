@@ -346,7 +346,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         $primaryKey = array_key_first($this->primaryKey);
 
-        $this->sql = 'SELECT ' . $this->tableName . '.*, ' . $joinedTableName . '.* '
+        $this->sql = 'SELECT ' . $joinedTableName . '.*, ' . $this->tableName . '.* '
             . 'FROM ' . $this->tableName . ' '
             . 'JOIN ' . $joinedTableName . ' ON ' . $this->tableName . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
             . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?';
