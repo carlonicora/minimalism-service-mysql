@@ -338,7 +338,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @return array|null
      * @throws DbSqlException
      */
-    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array
+    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue, ?array $additionalManyToManyValues=null) : ?array
     {
         if (count($this->primaryKey) > 1){
             return null;
@@ -346,12 +346,25 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         $primaryKey = array_key_first($this->primaryKey);
 
-        $this->sql = 'SELECT ' . $this->tableName . '.* '
+        $this->sql = 'SELECT ' . $this->tableName . '.*, ' . $joinedTableName . '.* '
             . 'FROM ' . $this->tableName . ' '
             . 'JOIN ' . $joinedTableName . ' ON ' . $this->tableName . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
-            . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?;';
+            . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?';
 
         $this->parameters = ['i', $joinedTablePrimaryKeyValue];
+
+        if ($additionalManyToManyValues !== null){
+            foreach ($additionalManyToManyValues as $additionalManyToManyValue){
+                $this->sql .= ' AND '
+                    . $joinedTableName . '.'
+                    . $additionalManyToManyValue['field']
+                    . $additionalManyToManyValue['comparison'] . '?';
+                $this->parameters[0] .= $additionalManyToManyValue['type'];
+                $this->parameters[] = $additionalManyToManyValue['value'];
+            }
+        }
+
+        $this->sql .= ';';
 
         return $this->functions->runRead();
     }
