@@ -9,6 +9,7 @@ use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLExecutionFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLFunctionsFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLQueryCreationFacade;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\GenericQueriesInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
@@ -88,7 +89,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         if (!isset($this->primaryKey)){
             foreach ($this->fields as $fieldName=>$fieldFlags){
-                if (($fieldFlags & self::PRIMARY_KEY) > 0){
+                if (($fieldFlags & FieldInterface::PRIMARY_KEY) > 0){
                     /** @noinspection NotOptimalIfConditionsInspection */
                     if (!isset($this->primaryKey)){
                         $this->primaryKey = [];
@@ -99,7 +100,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         }
 
         foreach ($this->fields as $fieldName=>$fieldFlags){
-            if (($fieldFlags & self::AUTO_INCREMENT) > 0){
+            if (($fieldFlags & FieldInterface::AUTO_INCREMENT) > 0){
                 $this->autoIncrementField = $fieldName;
                 break;
             }
@@ -188,9 +189,9 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     {
         $fieldFlags = $this->fields[$fieldName];
         return
-            ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & TableInterface::TIME_CREATE))
+            ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & FieldInterface::TIME_CREATE))
             ||
-            ($fieldFlags & TableInterface::TIME_UPDATE);
+            ($fieldFlags & FieldInterface::TIME_UPDATE);
     }
 
     /**
@@ -244,18 +245,13 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                     foreach ($parametersToUse as $parameter){
                         if (count($parameters) === 0) {
                             $parameters[] = $parameter;
+                        } elseif ($this->isTimingField($parameter, $status)) {
+                            $record[$parameter] = date('Y-m-d H:i:s');
+                            $parameters[] = $record[$parameter];
                         } elseif (array_key_exists($parameter, $record)){
-                            if ($this->isTimingField($parameter, $status)) {
-                                $record[$parameter] = date('Y-m-d H:i:s');
-                            }
                             $parameters[] = $record[$parameter];
                         } else {
-                            if ($this->isTimingField($parameter, $status)) {
-                                $record[$parameter] = date('Y-m-d H:i:s');
-                                $parameters[] = $record[$parameter];
-                            } else {
-                                $parameters[] = null;
-                            }
+                            $parameters[] = null;
                         }
                     }
                     $records[$recordKey]['_sql']['parameters'] = $parameters;
@@ -335,6 +331,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param string $joinedTablePrimaryKeyName
      * @param string $joinedTableForeignKeyName
      * @param int $joinedTablePrimaryKeyValue
+     * @param array|null $additionalManyToManyValues
      * @return array|null
      * @throws DbSqlException
      */

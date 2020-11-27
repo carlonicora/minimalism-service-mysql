@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 
@@ -85,11 +86,11 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function convertFieldType($fieldType): string {
         if (is_int($fieldType)){
-            if (($fieldType & TableInterface::INTEGER) > 0){
+            if (($fieldType & FieldInterface::INTEGER) > 0){
                 $fieldType = 'i';
-            } elseif (($fieldType & TableInterface::DOUBLE) > 0){
+            } elseif (($fieldType & FieldInterface::DOUBLE) > 0){
                 $fieldType = 'd';
-            } elseif (($fieldType & TableInterface::STRING) > 0){
+            } elseif (($fieldType & FieldInterface::STRING) > 0){
                 $fieldType = 's';
             } else {
                 $fieldType = 'b';
