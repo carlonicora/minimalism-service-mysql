@@ -218,8 +218,6 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                 }
 
                 if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED) {
-                    $oneSql .= $this->query->generateInsertOnDuplicateUpdateRecord($record);
-
                     $records[$recordKey]['_sql'] = [];
                     $records[$recordKey]['_sql']['status'] = $status;
 
@@ -254,6 +252,8 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                             $parameters[] = null;
                         }
                     }
+
+                    $oneSql .= $this->query->generateInsertOnDuplicateUpdateRecord($record);
                     $records[$recordKey]['_sql']['parameters'] = $parameters;
                 }
             }
