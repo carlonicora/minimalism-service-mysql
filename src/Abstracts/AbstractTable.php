@@ -352,12 +352,19 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         if ($additionalManyToManyValues !== null){
             foreach ($additionalManyToManyValues as $additionalManyToManyValue){
-                $this->sql .= ' AND '
-                    . $joinedTableName . '.'
-                    . $additionalManyToManyValue['field']
-                    . $additionalManyToManyValue['comparison'] . '?';
-                $this->parameters[0] .= $additionalManyToManyValue['type'];
-                $this->parameters[] = $additionalManyToManyValue['value'];
+                if ($additionalManyToManyValue['type'] === 'field') {
+                    $this->sql .= ' ' . $additionalManyToManyValue['fieldConnector'] . ' '
+                        . $joinedTableName . '.'
+                        . $additionalManyToManyValue['fieldName']
+                        . $additionalManyToManyValue['fieldComparison'] . '?';
+                    $this->parameters[0] .= $additionalManyToManyValue['fieldType'];
+                    $this->parameters[] = $additionalManyToManyValue['fieldValue'];
+                } elseif ($additionalManyToManyValue['type'] === 'order') {
+                    $this->sql .= ' ORDER BY '
+                        . $joinedTableName . '.'
+                        . $additionalManyToManyValue['fieldName']
+                        . $additionalManyToManyValue['order'];
+                }
             }
         }
 
