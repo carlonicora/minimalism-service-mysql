@@ -331,11 +331,10 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param string $joinedTablePrimaryKeyName
      * @param string $joinedTableForeignKeyName
      * @param int $joinedTablePrimaryKeyValue
-     * @param array|null $additionalManyToManyValues
      * @return array|null
      * @throws DbSqlException
      */
-    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue, ?array $additionalManyToManyValues=null) : ?array
+    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array
     {
         if (count($this->primaryKey) > 1){
             return null;
@@ -346,29 +345,9 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         $this->sql = 'SELECT ' . $joinedTableName . '.*, ' . $this->tableName . '.* '
             . 'FROM ' . $this->tableName . ' '
             . 'JOIN ' . $joinedTableName . ' ON ' . $this->tableName . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
-            . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?';
+            . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?;';
 
         $this->parameters = ['i', $joinedTablePrimaryKeyValue];
-
-        if ($additionalManyToManyValues !== null){
-            foreach ($additionalManyToManyValues as $additionalManyToManyValue){
-                if ($additionalManyToManyValue['type'] === 'field') {
-                    $this->sql .= ' ' . $additionalManyToManyValue['fieldConnector'] . ' '
-                        . $joinedTableName . '.'
-                        . $additionalManyToManyValue['fieldName']
-                        . $additionalManyToManyValue['fieldComparison'] . '?';
-                    $this->parameters[0] .= $additionalManyToManyValue['fieldType'];
-                    $this->parameters[] = $additionalManyToManyValue['fieldValue'];
-                } elseif ($additionalManyToManyValue['type'] === 'order') {
-                    $this->sql .= ' ORDER BY '
-                        . $joinedTableName . '.'
-                        . $additionalManyToManyValue['fieldName']
-                        . $additionalManyToManyValue['order'];
-                }
-            }
-        }
-
-        $this->sql .= ';';
 
         return $this->functions->runRead();
     }
