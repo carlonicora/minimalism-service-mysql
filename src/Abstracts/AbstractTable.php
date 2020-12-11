@@ -208,6 +208,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                 $records = [$records];
             }
 
+            $atLeastOneUpdatedRecord = false;
             $onlyInsertOrUpdate = true;
             $oneSql = $this->query->generateInsertOnDuplicateUpdateStart();
             foreach ($records as $recordKey=>$record) {
@@ -215,6 +216,10 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                     $status = RecordFacade::RECORD_STATUS_DELETED;
                 } else {
                     $status = RecordFacade::getStatus($record);
+                }
+
+                if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED){
+                    $atLeastOneUpdatedRecord = true;
                 }
 
                 if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED) {
@@ -261,12 +266,14 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
             $oneSql = substr($oneSql, 0, -1);
             $oneSql .= $this->query->generateInsertOnDuplicateUpdateEnd();
 
-            if ($onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
-                $this->parameters = [];
-                $this->sql = $oneSql;
-                $this->functions->runSql();
-            } else {
-                $this->functions->runUpdate($records);
+            if ($atLeastOneUpdatedRecord) {
+                if ($onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
+                    $this->parameters = [];
+                    $this->sql = $oneSql;
+                    $this->functions->runSql();
+                } else {
+                    $this->functions->runUpdate($records);
+                }
             }
         }
 

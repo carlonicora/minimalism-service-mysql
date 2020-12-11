@@ -101,7 +101,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
                 $this->executeQuery($sql, $parameters, $retry);
             } else {
                 try {
-                    $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR, 512);
+                    $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR);
                 } catch (JsonException $e) {
                     $jsonParameters = '';
                 }
