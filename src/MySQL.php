@@ -31,11 +31,12 @@ class MySQL extends abstractService {
 
     /**
      * @param string $dbReader
+     * @param bool $createStandaloneConnection
      * @return TableInterface
-     * @throws Exception|ConfigurationException
+     * @throws Exception
      */
-    public function create(string $dbReader): TableInterface {
-        if (array_key_exists($dbReader, $this->configData->tableManagers)) {
+    public function create(string $dbReader, bool $createStandaloneConnection=false): TableInterface {
+        if (!$createStandaloneConnection && array_key_exists($dbReader, $this->configData->tableManagers)) {
             return $this->configData->tableManagers[$dbReader];
         }
 
@@ -50,16 +51,24 @@ class MySQL extends abstractService {
         $response->initialiseAttributes();
 
         $databaseName = $response->getDbToUse();
-        $connection = $this->configData->getDatabase($databaseName);
 
-        if (!isset($connection)) {
-            $connection = $this->connect($databaseName);
+        if ($createStandaloneConnection){
+            $connectionString = $this->configData->getDatabaseConnectionString($databaseName);
+
+            $response->setStandaloneConnection($connectionString);
+        } else {
+            $connection = $this->configData->getDatabase($databaseName);
+
+            if (!isset($connection)) {
+                $connection = $this->connect($databaseName);
+            }
+
+            $response->setConnection($connection);
+            $this->configData->setDatabase($databaseName, $connection);
+
+            $this->configData->tableManagers[$dbReader] = $response;
         }
 
-        $response->setConnection($connection);
-        $this->configData->setDatabase($databaseName, $connection);
-
-        $this->configData->tableManagers[$dbReader] = $response;
 
         return $response;
     }

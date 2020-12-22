@@ -14,4 +14,9 @@ interface ConnectivityInterface
      * @param mysqli $connection
      */
     public function setConnection(mysqli $connection): void;
+
+    /**
+     * @param array $connectionString
+     */
+    public function setStandaloneConnection(array $connectionString): void;
 }

@@ -2,6 +2,7 @@
 
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
+use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
 use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
 use CarloNicora\Minimalism\Services\MySQL\Events\MySQLErrorEvents;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
@@ -22,8 +23,8 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     /** @var MySQL  */
     private MySQL $mysql;
 
-    /** @var mysqli */
-    private mysqli $connection;
+    /** @var mysqli|null */
+    private ?mysqli $connection=null;
 
     /** @var TableInterface  */
     private TableInterface $table;
@@ -42,6 +43,17 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         $this->services = $services;
         $this->mysql = $this->services->service(MySQL::class);
         $this->table = $table;
+    }
+
+    /**
+     *
+     */
+    public function __destruct()
+    {
+        if ($this->connection->ping()){
+            $this->connection->close();
+        }
+        $this->connection = null;
     }
 
     /**
@@ -78,6 +90,34 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         $this->connection = $connection;
     }
 
+    /**
+     * @param array $connectionString
+     * @throws Exception
+     */
+    public function setStandaloneConnection(array $connectionString): void
+    {
+        $this->connection = new mysqli(
+            $connectionString['host'],
+            $connectionString['username'],
+            $connectionString['password'],
+            $connectionString['dbName'],
+            $connectionString['port']);
+
+        $this->connection->connect(
+            $connectionString['host'],
+            $connectionString['username'],
+            $connectionString['password'],
+            $connectionString['dbName'],
+            $connectionString['port']);
+
+        if ($this->connection->connect_errno) {
+            $this->services->logger()->error()
+                ->log(MySQLErrorEvents::ERROR_CONNECTION_ERROR($connectionString['dbName'], $this->connection->connect_errno, $this->connection->connect_error))
+                ->throw(ConfigurationException::class, 'Error connecting to the database');
+        }
+
+        $this->connection->set_charset('utf8mb4');
+    }
 
     /**
      * @param string $sql
