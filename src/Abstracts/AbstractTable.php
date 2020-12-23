@@ -181,6 +181,15 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     }
 
     /**
+     * @param array $connectionString
+     * @throws Exception
+     */
+    public function setStandaloneConnection(array $connectionString): void
+    {
+        $this->executor->setStandaloneConnection($connectionString);
+    }
+
+    /**
      * @param string $fieldName
      * @param int $status
      * @return bool
