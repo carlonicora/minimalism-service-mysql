@@ -5,7 +5,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\ConnectivityInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use mysqli;
 use mysqli_stmt;
 use Exception;
@@ -22,9 +22,9 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     /**
      * SQLExecutionFacade constructor.
      * @param ConnectionFactory $connectionFactory
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      */
-    public function __construct(private ConnectionFactory $connectionFactory, private TableInterface $table){}
+    public function __construct(private ConnectionFactory $connectionFactory, private MySqlTableInterface $table){}
 
     /**
      *

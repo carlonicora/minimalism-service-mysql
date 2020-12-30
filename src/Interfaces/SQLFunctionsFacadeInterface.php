@@ -7,10 +7,10 @@ interface SQLFunctionsFacadeInterface
 {
     /**
      * SQLFunctionsFacadeInterface constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      * @param SQLExecutionFacadeInterface $executor
      */
-    public function __construct(TableInterface $table, SQLExecutionFacadeInterface $executor);
+    public function __construct(MySqlTableInterface $table, SQLExecutionFacadeInterface $executor);
 
     /**
      * @return array

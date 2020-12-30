@@ -3,19 +3,19 @@ namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use JetBrains\PhpStorm\Pure;
 
 class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 {
-    /** @var TableInterface  */
-    private TableInterface $table;
+    /** @var MySqlTableInterface  */
+    private MySqlTableInterface $table;
 
     /**
      * SQLQueryCreationFacade constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      */
-    public function __construct(TableInterface $table)
+    public function __construct(MySqlTableInterface $table)
     {
         $this->table = $table;
     }

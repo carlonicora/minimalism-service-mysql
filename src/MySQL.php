@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
 use RuntimeException;
 
@@ -29,10 +29,10 @@ class MySQL implements ServiceInterface, DataInterface
 
     /**
      * @param string $dbReader
-     * @return TableInterface
+     * @return MySqlTableInterface
      * @throws Exception
      */
-    public function create(string $dbReader): TableInterface
+    public function create(string $dbReader): MySqlTableInterface
     {
         if (array_key_exists($dbReader, $this->tableManagers)) {
             return $this->tableManagers[$dbReader];
@@ -42,7 +42,7 @@ class MySQL implements ServiceInterface, DataInterface
             throw new RuntimeException('Database reader class missing', 500);
         }
 
-        /** @var TableInterface $response */
+        /** @var MySqlTableInterface $response */
         $response = new $dbReader($this->connectionFactory);
         $response->initialiseAttributes();
 

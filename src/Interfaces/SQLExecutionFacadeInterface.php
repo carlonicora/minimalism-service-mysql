@@ -10,9 +10,9 @@ interface SQLExecutionFacadeInterface
     /**
      * SQLExecutionFacadeInterface constructor.
      * @param ConnectionFactory $connectionFactory
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      */
-    public function __construct(ConnectionFactory $connectionFactory, TableInterface $table);
+    public function __construct(ConnectionFactory $connectionFactory, MySqlTableInterface $table);
 
     /**
      * @param string $databaseName

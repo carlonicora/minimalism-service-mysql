@@ -12,12 +12,12 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\GenericQueriesInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use mysqli;
 
-abstract class AbstractTable implements TableInterface, GenericQueriesInterface
+abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueriesInterface
 {
     /** @var string|null  */
     protected ?string $sql=null;

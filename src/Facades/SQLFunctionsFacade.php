@@ -4,23 +4,23 @@ namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
 
 class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 {
-    /** @var TableInterface  */
-    private TableInterface $table;
+    /** @var MySqlTableInterface  */
+    private MySqlTableInterface $table;
 
     /** @var SQLExecutionFacadeInterface  */
     private SQLExecutionFacadeInterface $executor;
 
     /**
      * SQLFunctionsFacade constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      * @param SQLExecutionFacadeInterface $executor
      */
-    public function __construct(TableInterface $table, SQLExecutionFacadeInterface $executor)
+    public function __construct(MySqlTableInterface $table, SQLExecutionFacadeInterface $executor)
     {
         $this->table = $table;
         $this->executor = $executor;
