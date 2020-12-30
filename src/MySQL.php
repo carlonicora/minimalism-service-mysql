@@ -1,13 +1,14 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL;
 
+use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use Exception;
 use RuntimeException;
 
-class MySQL implements ServiceInterface
+class MySQL implements ServiceInterface, DataInterface
 {
     /** @var array */
     private array $tableManagers = [];
