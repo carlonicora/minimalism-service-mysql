@@ -1,18 +1,16 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
-use CarloNicora\Minimalism\Core\Services\Exceptions\ServiceNotFoundException;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use Exception;
 
 interface TableInterface extends ConnectivityInterface
 {
     /**
      * abstractDatabaseManager constructor.
-     * @param servicesFactory $services
-     * @throws serviceNotFoundException
+     * @param ConnectionFactory $connectionFactory
      */
-    public function __construct(servicesFactory $services);
+    public function __construct(ConnectionFactory $connectionFactory);
 
     /**
      * @param array $connectionParameters
@@ -57,13 +55,13 @@ interface TableInterface extends ConnectivityInterface
     /**
      * @param array $records
      * @param bool $delete
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function update(array &$records, bool $delete=false): void;
 
     /**
      * @param array $records
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function delete(array $records): void;
 
@@ -71,7 +69,7 @@ interface TableInterface extends ConnectivityInterface
      * @param string $fieldName
      * @param $fieldValue
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function loadByField(string $fieldName, $fieldValue) : array;
 
@@ -81,7 +79,7 @@ interface TableInterface extends ConnectivityInterface
      * @param string $joinedTableForeignKeyName
      * @param int $joinedTablePrimaryKeyValue
      * @return array|null
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array;
 }

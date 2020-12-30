@@ -1,14 +1,12 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Logger\Logger;
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLExecutionFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLFunctionsFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLQueryCreationFacade;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\GenericQueriesInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
@@ -16,6 +14,7 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 use mysqli;
 
 abstract class AbstractTable implements TableInterface, GenericQueriesInterface
@@ -53,18 +52,14 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /** @var SQLQueryCreationFacadeInterface  */
     protected SQLQueryCreationFacadeInterface $query;
 
-    /** @var Logger */
-    protected Logger $logger;
-
     /**
      * AbstractTable constructor.
-     * @param ServicesFactory $services
+     * @param ConnectionFactory $connectionFactory
      * @throws Exception
      */
-    public function __construct(ServicesFactory $services)
+    #[Pure] public function __construct(ConnectionFactory $connectionFactory)
     {
-        $this->logger = $services->logger();
-        $this->executor = new SQLExecutionFacade($services, $this);
+        $this->executor = new SQLExecutionFacade($connectionFactory, $this);
         $this->functions = new SQLFunctionsFacade($this, $this->executor);
         $this->query = new SQLQueryCreationFacade($this);
     }
@@ -163,7 +158,6 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         return $this->insertIgnore;
     }
 
-
     /**
      * @return string
      */
@@ -206,9 +200,10 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /**
      * @param array $records
      * @param bool $delete
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function update(array &$records, bool $delete=false): void {
+    public function update(array &$records, bool $delete=false): void
+    {
         $isSingle = false;
 
         if (isset($records) && count($records) > 0){
@@ -293,9 +288,10 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
     /**
      * @param array $records
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function delete(array $records): void {
+    public function delete(array $records): void
+    {
         $this->update($records, true);
     }
 
@@ -303,9 +299,10 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param $id
      * @return array
      * @throws DbRecordNotFoundException
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function loadFromId($id): array {
+    public function loadById($id): array
+    {
         $this->sql = $this->query->generateSelectStatement();
         $this->parameters = $this->query->generateSelectParameters();
         $this->parameters[1] = $id;
@@ -314,10 +311,23 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     }
 
     /**
+     * @param $id
      * @return array
-     * @throws DbSqlException
+     * @throws DbRecordNotFoundException
+     * @throws Exception
+     * @deprecated
      */
-    public function loadAll(): array {
+    public function loadFromId($id): array
+    {
+        return $this->loadById($id);
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     */
+    public function loadAll(): array
+    {
         $this->sql = 'SELECT * FROM ' . $this->tableName . ';';
         $this->parameters = [];
 
@@ -326,16 +336,17 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
     /**
      * @return int
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function count(): int {
+    public function count(): int
+    {
         $this->sql = 'SELECT count(*) as counter FROM ' . $this->tableName . ';';
         $this->parameters = [];
 
         try {
             $responseArray = $this->functions->runReadSingle();
             $response = $responseArray['counter'];
-        } catch (DbRecordNotFoundException $e) {
+        } catch (DbRecordNotFoundException) {
             $response = 0;
         }
 
@@ -348,9 +359,14 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param string $joinedTableForeignKeyName
      * @param int $joinedTablePrimaryKeyValue
      * @return array|null
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array
+    public function getFirstLevelJoin(
+        string $joinedTableName,
+        string $joinedTablePrimaryKeyName,
+        string $joinedTableForeignKeyName,
+        int $joinedTablePrimaryKeyValue
+    ) : ?array
     {
         if (count($this->primaryKey) > 1){
             return null;
@@ -372,7 +388,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param string $fieldName
      * @param $fieldValue
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function loadByField(string $fieldName, $fieldValue) : array
     {

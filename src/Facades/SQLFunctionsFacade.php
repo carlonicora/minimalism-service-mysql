@@ -2,10 +2,10 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
 use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use Exception;
 
 class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 {
@@ -27,16 +27,17 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
     }
 
     /**
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runSql(): void {
+    public function runSql(): void
+    {
         $this->executor->keepaliveConnection();
         try {
             $this->executor->toggleAutocommit(false);
             $statement = $this->executor->executeQuery($this->table->getSql(), $this->table->getParameters());
             $this->executor->closeStatement($statement);
             $this->executor->toggleAutocommit(true);
-        } catch (DbSqlException $exception) {
+        } catch (Exception $exception) {
             $this->executor->rollback();
             throw $exception;
         }
@@ -44,9 +45,10 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 
     /**
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runRead(): array {
+    public function runRead(): array
+    {
         $this->executor->keepaliveConnection();
 
         $response = [];
@@ -69,9 +71,10 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
     /**
      * @return array
      * @throws DbRecordNotFoundException
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runReadSingle(): array {
+    public function runReadSingle(): array
+    {
         $response = $this->runRead();
 
         if (count($response) === 0) {
@@ -87,9 +90,10 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 
     /**
      * @param array $objects
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runUpdate(array &$objects): void {
+    public function runUpdate(array &$objects): void
+    {
         $this->executor->keepaliveConnection();
 
         try {
@@ -112,7 +116,7 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
             }
 
             $this->executor->toggleAutocommit(true);
-        } catch (DbSqlException $exception) {
+        } catch (Exception $exception) {
             $this->executor->rollback();
             throw $exception;
         }

@@ -43,7 +43,7 @@ interface SQLQueryCreationFacadeInterface
      * @param int|string $fieldType
      * @return string
      */
-    public function convertFieldType($fieldType): string;
+    public function convertFieldType(int|string $fieldType): string;
 
     /**
      * @return array

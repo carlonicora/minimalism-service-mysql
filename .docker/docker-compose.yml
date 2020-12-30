@@ -1,19 +1,15 @@
-version: '3.7'
+version: '3.8'
 
 services:
   minimalism-service-mysql:
     container_name: minimalism-service-mysql
-    image: carlonicora/minimalism-service-mysql:2.0.0
+    image: carlonicora/minimalism-service-mysql:4.0
     build:
       context: .
       dockerfile: ./php-cli/Dockerfile
-      args:
-        - XDEBUG_HOST=${XDEBUG_HOST}
-        - XDEBUG_PORT=${XDEBUG_PORT}
     working_dir: /app
     volumes:
       - ../:/app
-      - ../:/opt/project
     tty: true
     stdin_open: true
     networks:

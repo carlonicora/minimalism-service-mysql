@@ -4,6 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use JetBrains\PhpStorm\Pure;
 
 class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 {
@@ -62,7 +63,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateSelectStatement(): string {
+    public function generateSelectStatement(): string
+    {
         $response = $this->SELECT();
 
         if ($this->table->getPrimaryKey() !== null) {
@@ -84,7 +86,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @param int|string $fieldType
      * @return string
      */
-    public function convertFieldType($fieldType): string {
+    #[Pure] public function convertFieldType(int|string $fieldType): string
+    {
         if (is_int($fieldType)){
             if (($fieldType & FieldInterface::INTEGER) > 0){
                 $fieldType = 'i';
@@ -103,7 +106,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateSelectParameters(): array {
+    public function generateSelectParameters(): array
+    {
         $response = [];
 
         $response[] = '';
@@ -120,7 +124,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return bool
      */
-    public function canUseInsertOnDuplicate(): bool {
+    public function canUseInsertOnDuplicate(): bool
+    {
         if ($this->table->getPrimaryKey() !== null) {
             foreach ($this->table->getTableFields() as $fieldName => $fieldType) {
                 if (!array_key_exists($fieldName, $this->table->getPrimaryKey())) {
@@ -134,7 +139,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertOnDuplicateUpdateStart(): string {
+    public function generateInsertOnDuplicateUpdateStart(): string
+    {
         $response = $this->INSERT() . ' (';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -152,7 +158,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @param array $record
      * @return string
      */
-    public function generateInsertOnDuplicateUpdateRecord(array $record): string {
+    public function generateInsertOnDuplicateUpdateRecord(array $record): string
+    {
         $response = '(';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -181,7 +188,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertOnDuplicateUpdateEnd(): string {
+    public function generateInsertOnDuplicateUpdateEnd(): string
+    {
         $response = ' ON DUPLICATE KEY UPDATE ';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -200,7 +208,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertStatement(): string {
+    public function generateInsertStatement(): string
+    {
         $response = 'INSERT' . $this->table->getInsertIgnore() . ' INTO ' . $this->table->getTableName() . ' (';
 
         $parameterList = '';
@@ -220,7 +229,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateInsertParameters(): array {
+    public function generateInsertParameters(): array
+    {
         $response = [];
 
         $response[] = '';
@@ -237,7 +247,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateDeleteStatement(): string {
+    public function generateDeleteStatement(): string
+    {
         $response = $this->DELETE() . ' WHERE ';
 
         foreach ($this->table->getPrimaryKey() as $fieldName=>$fieldType){
@@ -254,7 +265,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateDeleteParameters(): array {
+    public function generateDeleteParameters(): array
+    {
         $response = [];
 
         $response[] = '';
@@ -271,7 +283,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateUpdateStatement(): string {
+    public function generateUpdateStatement(): string
+    {
         $response = $this->UPDATE() . ' ';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -300,7 +313,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateUpdateParameters(): array {
+    public function generateUpdateParameters(): array
+    {
         $response = [];
 
         $response[] = '';

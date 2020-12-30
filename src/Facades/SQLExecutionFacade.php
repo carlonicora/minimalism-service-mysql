@@ -2,48 +2,29 @@
 
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
-use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\MySQL\Events\MySQLErrorEvents;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\ConnectivityInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
-use CarloNicora\Minimalism\Services\MySQL\MySQL;
-use JsonException;
 use mysqli;
 use mysqli_stmt;
 use Exception;
+use RuntimeException;
 
 class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInterface
 {
-    /** @var ServicesFactory  */
-    private ServicesFactory $services;
-
-    /** @var MySQL  */
-    private MySQL $mysql;
-
     /** @var mysqli|null */
     private ?mysqli $connection=null;
-
-    /** @var TableInterface  */
-    private TableInterface $table;
 
     /** @var string|null  */
     private ?string $databaseName=null;
 
     /**
      * SQLExecutionFacade constructor.
-     * @param ServicesFactory $services
+     * @param ConnectionFactory $connectionFactory
      * @param TableInterface $table
-     * @throws Exception
      */
-    public function __construct(ServicesFactory $services, TableInterface $table)
-    {
-        $this->services = $services;
-        $this->mysql = $this->services->service(MySQL::class);
-        $this->table = $table;
-    }
+    public function __construct(private ConnectionFactory $connectionFactory, private TableInterface $table){}
 
     /**
      *
@@ -69,9 +50,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      */
     public function keepaliveConnection(): void
     {
-        if (!$this->connection->ping()){
-            $this->connection = $this->mysql->connect($this->databaseName);
-        }
+        $this->connectionFactory->keepalive($this->connection, $this->databaseName);
     }
 
     /**
@@ -111,9 +90,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
             $connectionString['port']);
 
         if ($this->connection->connect_errno) {
-            $this->services->logger()->error()
-                ->log(MySQLErrorEvents::ERROR_CONNECTION_ERROR($connectionString['dbName'], $this->connection->connect_errno, $this->connection->connect_error))
-                ->throw(ConfigurationException::class, 'Error connecting to the database');
+            throw new RuntimeException('Error connecting to the database', 503);
         }
 
         $this->connection->set_charset('utf8mb4');
@@ -140,14 +117,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
                 usleep(100000);
                 $this->executeQuery($sql, $parameters, $retry);
             } else {
-                try {
-                    $jsonParameters = json_encode($parameters, JSON_THROW_ON_ERROR);
-                } catch (JsonException $e) {
-                    $jsonParameters = '';
-                }
-                $this->services->logger()->error()
-                    ->log(MySQLErrorEvents::ERROR_STATEMENT_EXECUTION($sql, $jsonParameters, $statement->errno, $statement->error))
-                    ->throw(DbSqlException::class, 'MySQL statement execution failed.');
+                throw new RuntimeException('MySQL statement execution failed.', 500);
             }
         }
 
@@ -163,9 +133,9 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     }
 
     /**
-     * @return mixed|void
+     * @return int|null
      */
-    public function getInsertedId()
+    public function getInsertedId(): ?int
     {
         return $this->connection->insert_id;
     }
@@ -187,45 +157,37 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
 
     /**
      * @param bool $enabled
-     * @throws Exception|DbSqlException
+     * @throws Exception
      */
     public function toggleAutocommit(bool $enabled = true): void
     {
         if (false === $this->connection->autocommit($enabled)) {
-            $this->services->logger()->error()
-                ->log($enabled
-                    ? MySQLErrorEvents::ERROR_ENABLE_AUTOCOMMIT($this->connection->errno, $this->connection->sqlstate, $this->connection->error)
-                    : MySQLErrorEvents::ERROR_DISABLE_AUTOCOMMIT($this->connection->errno, $this->connection->sqlstate, $this->connection->error))
-                ->throw(DbSqlException::class, 'Autocommit failed');
+            throw new RuntimeException('Autocommit failed', 500);
         }
     }
 
     /**
      * @param mysqli_stmt $statement
-     * @throws Exception|DbSqlException
+     * @throws Exception
      */
     public function closeStatement(mysqli_stmt $statement) : void
     {
         if (false === $statement->close()) {
-            $this->services->logger()->error()
-                ->log(MySQLErrorEvents::ERROR_CLOSE_STATEMENT($this->getStatementErrors($statement)))
-                ->throw(DbSqlException::class, 'MySQL failed to close statement.');
+            throw new RuntimeException('MySQL failed to close statement', 500);
         }
     }
 
     /**
      * @param string $sql
      * @return mysqli_stmt
-     * @throws Exception|DbSqlException
+     * @throws Exception
      */
     public function prepareStatement(string $sql): mysqli_stmt
     {
         $response = $this->connection->prepare($sql);
 
         if ($response === false) {
-            $this->services->logger()->error()
-                ->log(MySQLErrorEvents::ERROR_STATEMENT_PREPARATION($sql, $this->connection->errno, $this->connection->sqlstate, $this->connection->error))
-                ->throw(DbSqlException::class, 'MySQL statement preparation failed.');
+            throw new RuntimeException('MySQL statement preparation failed', 500);
         }
 
         return $response;
