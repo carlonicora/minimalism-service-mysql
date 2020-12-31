@@ -94,15 +94,17 @@ class ConnectionFactory
     {
         $response = null;
 
-        if ($this->databases !== null && array_key_exists($databaseName, $this->databases)){
+        if (!array_key_exists($databaseName, $this->databases)) {
+            $response = $this->connect($databaseName);
+        } else {
             $response = $this->databases[$databaseName];
 
             if (!isset($response)) {
                 $response = $this->connect($databaseName);
             }
-
-            $this->setDatabase($databaseName, $response);
         }
+
+        $this->setDatabase($databaseName, $response);
 
         return $response;
     }
