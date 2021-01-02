@@ -143,8 +143,11 @@ class MySQL implements ServiceInterface, DataInterface
         $tableInterface = $this->create($tableInterfaceClassName);
         $tableInterface->update($records);
 
-        //TODO: Implement cache invalidation
-        //TODO: Implement cache creation
+        if ($this->cache !== null && $cacheBuilder !== null) {
+            $this->cache->invalidate($cacheBuilder);
+
+            $this->cache->saveArray($cacheBuilder, $records, CacheBuilderInterface::DATA);
+        }
     }
 
     /**
@@ -162,7 +165,9 @@ class MySQL implements ServiceInterface, DataInterface
         $tableInterface = $this->create($tableInterfaceClassName);
         $tableInterface->update($records, true);
 
-        //TODO: Implement cache invalidation
+        if ($this->cache !== null && $cacheBuilder !== null) {
+            $this->cache->invalidate($cacheBuilder);
+        }
     }
 
     /**
@@ -181,8 +186,11 @@ class MySQL implements ServiceInterface, DataInterface
         $tableInterface = $this->create($tableInterfaceClassName);
         $tableInterface->update($records, true);
 
-        //TODO: Implement cache invalidation
-        //TODO: Implement cache creation
+        if ($this->cache !== null && $cacheBuilder !== null) {
+            $this->cache->invalidate($cacheBuilder);
+
+            $this->cache->saveArray($cacheBuilder, $records, CacheBuilderInterface::DATA);
+        }
 
         return ($records);
     }
