@@ -1,6 +1,8 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL;
 
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
+use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
@@ -20,11 +22,24 @@ class MySQL implements ServiceInterface, DataInterface
 
     /**
      * MySQL constructor.
+     * @param CacheInterface|null $cache
      * @param string $MINIMALISM_SERVICE_MYSQL
      */
-    public function __construct(string $MINIMALISM_SERVICE_MYSQL)
+    public function __construct(
+        private ?CacheInterface $cache,
+        string $MINIMALISM_SERVICE_MYSQL
+    )
     {
         $this->connectionFactory = new ConnectionFactory($MINIMALISM_SERVICE_MYSQL);
+    }
+
+
+    /**
+     * @param CacheInterface $cache
+     */
+    public function setCacheInterface(CacheInterface $cache): void
+    {
+        $this->cache = $cache;
     }
 
     /**
@@ -69,5 +84,106 @@ class MySQL implements ServiceInterface, DataInterface
     {
         $this->connectionFactory->resetDatabases();
         $this->tableManagers = [];
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return array
+     * @throws Exception
+     */
+    public function read(
+        string $tableInterfaceClassName,
+        string $functionName,
+        array $parameters,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): array
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $response = $tableInterface->{$functionName}($parameters);
+
+        if ($this->cache !== null && $cacheBuilder !== null) {
+            $this->cache->saveArray($cacheBuilder, $response, CacheBuilderInterface::DATA);
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @return int
+     * @throws Exception
+     */
+    public function count(
+        string $tableInterfaceClassName,
+        string $functionName,
+        array $parameters
+    ): int
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        return $tableInterface->{$functionName}($parameters);
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param array $records
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @throws Exception
+     */
+    public function update(
+        string $tableInterfaceClassName,
+        array $records,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): void
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $tableInterface->update($records);
+
+        //TODO: Implement cache invalidation
+        //TODO: Implement cache creation
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param array $records
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @throws Exception
+     */
+    public function delete(
+        string $tableInterfaceClassName,
+        array $records,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): void
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $tableInterface->update($records, true);
+
+        //TODO: Implement cache invalidation
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param array $records
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return array
+     * @throws Exception
+     */
+    public function insert(
+        string $tableInterfaceClassName,
+        array $records,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): array
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $tableInterface->update($records, true);
+
+        //TODO: Implement cache invalidation
+        //TODO: Implement cache creation
+
+        return ($records);
     }
 }
