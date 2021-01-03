@@ -5,6 +5,7 @@ use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
+use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
@@ -92,7 +93,8 @@ class MySQL implements ServiceInterface, DataInterface
      * @param array $parameters
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return array
-     * @throws Exception
+     * @throws Exception|DbRecordNotFoundException
+     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function read(
         string $tableInterfaceClassName,
@@ -102,7 +104,7 @@ class MySQL implements ServiceInterface, DataInterface
     ): array
     {
         $tableInterface = $this->create($tableInterfaceClassName);
-        $response = $tableInterface->{$functionName}($parameters);
+        $response = $tableInterface->{$functionName}(...$parameters);
 
         if ($this->cache !== null && $cacheBuilder !== null) {
             $this->cache->saveArray($cacheBuilder, $response, CacheBuilderInterface::DATA);
