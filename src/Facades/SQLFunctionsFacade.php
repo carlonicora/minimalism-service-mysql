@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
@@ -70,7 +70,7 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 
     /**
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws RecordNotFoundException
      * @throws Exception
      */
     public function runReadSingle(): array
@@ -78,11 +78,11 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
         $response = $this->runRead();
 
         if (count($response) === 0) {
-            throw new DbRecordNotFoundException('Record not found');
+            throw new RecordNotFoundException('Record not found');
         }
 
         if (count($response) > 1) {
-            throw new DbRecordNotFoundException('Multiple records found');
+            throw new RecordNotFoundException('Multiple records found');
         }
 
         return $response[0];

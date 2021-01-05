@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use Exception;
 
 interface GenericQueriesInterface
@@ -9,7 +9,7 @@ interface GenericQueriesInterface
     /**
      * @param $id
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws RecordNotFoundException
      * @throws Exception
      */
     public function loadFromId($id): array;

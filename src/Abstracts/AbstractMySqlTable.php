@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLExecutionFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLFunctionsFacade;
@@ -298,7 +298,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /**
      * @param $id
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws RecordNotFoundException
      * @throws Exception
      */
     public function loadById($id): array
@@ -313,7 +313,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /**
      * @param $id
      * @return array
-     * @throws DbRecordNotFoundException
+     * @throws RecordNotFoundException
      * @throws Exception
      * @deprecated
      */
@@ -346,7 +346,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         try {
             $responseArray = $this->functions->runReadSingle();
             $response = $responseArray['counter'];
-        } catch (DbRecordNotFoundException) {
+        } catch (RecordNotFoundException) {
             $response = 0;
         }
 
