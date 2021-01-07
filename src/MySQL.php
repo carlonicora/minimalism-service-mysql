@@ -88,6 +88,21 @@ class MySQL implements ServiceInterface, DataInterface
     }
 
     /**
+     * @param array $parameters
+     * @return array
+     */
+    private function flattenArray(array $parameters): array
+    {
+        $response = [];
+
+        foreach ($parameters ?? [] as $parameter) {
+            $response[] = $parameter;
+        }
+
+        return $response;
+    }
+
+    /**
      * @param string $tableInterfaceClassName
      * @param string $functionName
      * @param array $parameters
@@ -104,6 +119,7 @@ class MySQL implements ServiceInterface, DataInterface
     ): array
     {
         $tableInterface = $this->create($tableInterfaceClassName);
+        $parameters = $this->flattenArray($parameters);
         $response = $tableInterface->{$functionName}(...$parameters);
 
         if ($this->cache !== null && $cacheBuilder !== null) {

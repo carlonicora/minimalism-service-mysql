@@ -5,6 +5,7 @@ use Exception;
 use JetBrains\PhpStorm\Pure;
 use mysqli;
 use RuntimeException;
+use Throwable;
 
 class ConnectionFactory
 {
@@ -43,7 +44,11 @@ class ConnectionFactory
      */
     public function keepalive(mysqli &$connection, string $databaseName): void
     {
-        if (!$connection->ping()){
+        try {
+            if (!$connection->ping()) {
+                $connection = $this->connect($databaseName);
+            }
+        } catch (Exception|Throwable) {
             $connection = $this->connect($databaseName);
         }
     }

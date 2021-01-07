@@ -12,7 +12,7 @@ interface GenericQueriesInterface
      * @throws RecordNotFoundException
      * @throws Exception
      */
-    public function loadFromId($id): array;
+    public function loadById($id): array;
 
     /**
      * @return array

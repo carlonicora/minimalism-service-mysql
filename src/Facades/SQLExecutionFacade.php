@@ -10,6 +10,7 @@ use mysqli;
 use mysqli_stmt;
 use Exception;
 use RuntimeException;
+use Throwable;
 
 class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInterface
 {
@@ -31,9 +32,11 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      */
     public function __destruct()
     {
-        if ($this->connection->ping()){
-            $this->connection->close();
-        }
+        try {
+            if ($this->connection->ping()) {
+                $this->connection->close();
+            }
+        } catch (Exception|Throwable) {}
         $this->connection = null;
     }
 
