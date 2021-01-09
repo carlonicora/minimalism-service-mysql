@@ -119,13 +119,13 @@ class MySQL implements ServiceInterface, DataInterface
     ): array
     {
         $response = null;
-        if ($this->cache === null
-            ||
-            $cacheBuilder === null
-            ||
-            $this->cache->useCaching() === false
+        if ($this->cache !== null
+            &&
+            $cacheBuilder !== null
+            &&
+            $this->cache->useCaching()
         ) {
-            $response = $this->cache->read($cacheBuilder, CacheBuilderInterface::DATA);
+            $response = $this->cache->readArray($cacheBuilder, CacheBuilderInterface::DATA);
         }
 
         if ($response === null){
