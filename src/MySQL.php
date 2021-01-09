@@ -118,12 +118,24 @@ class MySQL implements ServiceInterface, DataInterface
         ?CacheBuilderInterface $cacheBuilder = null
     ): array
     {
-        $tableInterface = $this->create($tableInterfaceClassName);
-        $parameters = $this->flattenArray($parameters);
-        $response = $tableInterface->{$functionName}(...$parameters);
+        $response = null;
+        if ($this->cache === null
+            ||
+            $cacheBuilder === null
+            ||
+            $this->cache->useCaching() === false
+        ) {
+            $response = $this->cache->read($cacheBuilder, CacheBuilderInterface::DATA);
+        }
 
-        if ($this->cache !== null && $cacheBuilder !== null) {
-            $this->cache->saveArray($cacheBuilder, $response, CacheBuilderInterface::DATA);
+        if ($response === null){
+            $tableInterface = $this->create($tableInterfaceClassName);
+            $parameters = $this->flattenArray($parameters);
+            $response = $tableInterface->{$functionName}(...$parameters);
+
+            if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
+                $this->cache->saveArray($cacheBuilder, $response, CacheBuilderInterface::DATA);
+            }
         }
 
         return $response;
@@ -161,7 +173,7 @@ class MySQL implements ServiceInterface, DataInterface
         $tableInterface = $this->create($tableInterfaceClassName);
         $tableInterface->update($records);
 
-        if ($this->cache !== null && $cacheBuilder !== null) {
+        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
 
             $this->cache->saveArray($cacheBuilder, $records, CacheBuilderInterface::DATA);
@@ -183,7 +195,7 @@ class MySQL implements ServiceInterface, DataInterface
         $tableInterface = $this->create($tableInterfaceClassName);
         $tableInterface->update($records, true);
 
-        if ($this->cache !== null && $cacheBuilder !== null) {
+        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
         }
     }
@@ -204,7 +216,7 @@ class MySQL implements ServiceInterface, DataInterface
         $tableInterface = $this->create($tableInterfaceClassName);
         $tableInterface->update($records, true);
 
-        if ($this->cache !== null && $cacheBuilder !== null) {
+        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
 
             $this->cache->saveArray($cacheBuilder, $records, CacheBuilderInterface::DATA);
