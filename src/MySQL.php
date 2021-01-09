@@ -214,7 +214,7 @@ class MySQL implements ServiceInterface, DataInterface
     ): array
     {
         $tableInterface = $this->create($tableInterfaceClassName);
-        $tableInterface->update($records, true);
+        $tableInterface->update($records);
 
         if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
