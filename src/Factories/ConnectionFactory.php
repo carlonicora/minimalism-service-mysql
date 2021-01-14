@@ -68,8 +68,6 @@ class ConnectionFactory
 
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
-        $response->connect($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
-
         if ($response->connect_errno) {
             throw new RuntimeException('Error connecting to the database', 500);
         }
