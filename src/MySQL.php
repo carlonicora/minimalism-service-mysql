@@ -224,4 +224,23 @@ class MySQL implements ServiceInterface, DataInterface
 
         return ($records);
     }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @return array|null
+     * @throws Exception|RecordNotFoundException
+     * @noinspection PhpDocRedundantThrowsInspection
+     */
+    public function run(
+        string $tableInterfaceClassName,
+        string $functionName,
+        array $parameters,
+    ): ?array
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $parameters = $this->flattenArray($parameters);
+        return $tableInterface->{$functionName}(...$parameters);
+    }
 }
