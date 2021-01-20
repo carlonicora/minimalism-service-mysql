@@ -1,37 +1,37 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
+use Exception;
 
 interface SQLFunctionsFacadeInterface
 {
     /**
      * SQLFunctionsFacadeInterface constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      * @param SQLExecutionFacadeInterface $executor
      */
-    public function __construct(TableInterface $table, SQLExecutionFacadeInterface $executor);
+    public function __construct(MySqlTableInterface $table, SQLExecutionFacadeInterface $executor);
 
     /**
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function runRead() : array;
 
     /**
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function runReadSingle() : array;
 
     /**
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function runSql(): void;
 
     /**
      * @param array $objects
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function runUpdate(array &$objects): void;
 }

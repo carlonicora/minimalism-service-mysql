@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-mysql",
   "description": "MySQL service for minimalism",
-  "version": "2.0.1-beta1",
+  "version": "4.0.13",
   "homepage": "https://carlonicora.com",
   "time": "2019-05-14",
   "license": "MIT",
@@ -20,18 +20,10 @@
       "CarloNicora\\Minimalism\\Services\\MySQL\\":"src/"
     }
   },
-  "autoload-dev": {
-    "psr-4": {
-      "CarloNicora\\Minimalism\\Services\\MySQL\\Tests\\":"tests/"
-    }
-  },
   "require": {
-    "php": "^7.4",
+    "php": ">=8.0",
     "ext-mysqli": "*",
-    "carlonicora/minimalism": "~11.0",
+    "carlonicora/minimalism": "~12.0",
     "ext-json": "*"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^9"
   }
 }

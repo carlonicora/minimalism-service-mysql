@@ -5,9 +5,9 @@ interface SQLQueryCreationFacadeInterface
 {
     /**
      * SQLQueryGeneratorInterface constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      */
-    public function __construct(TableInterface $table);
+    public function __construct(MySqlTableInterface $table);
 
     /**
      * @return string
@@ -43,7 +43,7 @@ interface SQLQueryCreationFacadeInterface
      * @param int|string $fieldType
      * @return string
      */
-    public function convertFieldType($fieldType): string;
+    public function convertFieldType(int|string $fieldType): string;
 
     /**
      * @return array

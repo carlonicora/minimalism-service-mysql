@@ -1,41 +1,43 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
+use Exception;
 
 class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 {
-    /** @var TableInterface  */
-    private TableInterface $table;
+    /** @var MySqlTableInterface  */
+    private MySqlTableInterface $table;
 
     /** @var SQLExecutionFacadeInterface  */
     private SQLExecutionFacadeInterface $executor;
 
     /**
      * SQLFunctionsFacade constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      * @param SQLExecutionFacadeInterface $executor
      */
-    public function __construct(TableInterface $table, SQLExecutionFacadeInterface $executor)
+    public function __construct(MySqlTableInterface $table, SQLExecutionFacadeInterface $executor)
     {
         $this->table = $table;
         $this->executor = $executor;
     }
 
     /**
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runSql(): void {
+    public function runSql(): void
+    {
+        $this->executor->keepaliveConnection();
         try {
             $this->executor->toggleAutocommit(false);
             $statement = $this->executor->executeQuery($this->table->getSql(), $this->table->getParameters());
             $this->executor->closeStatement($statement);
             $this->executor->toggleAutocommit(true);
-        } catch (DbSqlException $exception) {
+        } catch (Exception $exception) {
             $this->executor->rollback();
             throw $exception;
         }
@@ -43,9 +45,12 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 
     /**
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runRead(): array {
+    public function runRead(): array
+    {
+        $this->executor->keepaliveConnection();
+
         $response = [];
 
         $statement = $this->executor->executeQuery($this->table->getSql(), $this->table->getParameters());
@@ -65,18 +70,19 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 
     /**
      * @return array
-     * @throws DbRecordNotFoundException
-     * @throws DbSqlException
+     * @throws RecordNotFoundException
+     * @throws Exception
      */
-    public function runReadSingle(): array {
+    public function runReadSingle(): array
+    {
         $response = $this->runRead();
 
         if (count($response) === 0) {
-            throw new DbRecordNotFoundException('Record not found');
+            throw new RecordNotFoundException('Record not found');
         }
 
         if (count($response) > 1) {
-            throw new DbRecordNotFoundException('Multiple records found');
+            throw new RecordNotFoundException('Multiple records found');
         }
 
         return $response[0];
@@ -84,9 +90,12 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
 
     /**
      * @param array $objects
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function runUpdate(array &$objects): void {
+    public function runUpdate(array &$objects): void
+    {
+        $this->executor->keepaliveConnection();
+
         try {
             $this->executor->toggleAutocommit(false);
 
@@ -107,7 +116,7 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
             }
 
             $this->executor->toggleAutocommit(true);
-        } catch (DbSqlException $exception) {
+        } catch (Exception $exception) {
             $this->executor->rollback();
             throw $exception;
         }

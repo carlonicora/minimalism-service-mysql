@@ -1,23 +1,23 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\Logger\Logger;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbRecordNotFoundException;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLExecutionFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLFunctionsFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLQueryCreationFacade;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\GenericQueriesInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 use mysqli;
 
-abstract class AbstractTable implements TableInterface, GenericQueriesInterface
+abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueriesInterface
 {
     /** @var string|null  */
     protected ?string $sql=null;
@@ -25,13 +25,13 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /** @var array  */
     protected array $parameters=[];
 
-    /** @var string */
+    /** @var string|null */
     protected ?string $autoIncrementField=null;
 
     /** @var array */
     protected array $fields;
 
-    /** @var array */
+    /** @var array|null */
     protected ?array $primaryKey;
 
     /** @var string */
@@ -52,26 +52,22 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     /** @var SQLQueryCreationFacadeInterface  */
     protected SQLQueryCreationFacadeInterface $query;
 
-    /** @var Logger */
-    protected Logger $logger;
-
     /**
      * AbstractTable constructor.
-     * @param ServicesFactory $services
+     * @param ConnectionFactory $connectionFactory
      * @throws Exception
      */
-    public function __construct(ServicesFactory $services)
+    #[Pure] public function __construct(ConnectionFactory $connectionFactory)
     {
-        $this->logger = $services->logger();
-        $this->executor = new SQLExecutionFacade($services, $this);
+        $this->executor = new SQLExecutionFacade($connectionFactory, $this);
         $this->functions = new SQLFunctionsFacade($this, $this->executor);
         $this->query = new SQLQueryCreationFacade($this);
     }
 
     /**
-     *
+     * @param array $connectionParameters
      */
-    public function initialiseAttributes() : void
+    public function initialiseAttributes(array $connectionParameters=[]) : void
     {
         $fullName = get_class($this);
         $fullNameParts = explode('\\', $fullName);
@@ -84,9 +80,11 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
             $this->dbToUse = (string)$fullNameParts[count($fullNameParts)-3];
         }
 
+        $this->executor->setDatabaseName($this->dbToUse);
+
         if (!isset($this->primaryKey)){
             foreach ($this->fields as $fieldName=>$fieldFlags){
-                if (($fieldFlags & self::PRIMARY_KEY) > 0){
+                if (($fieldFlags & FieldInterface::PRIMARY_KEY) > 0){
                     /** @noinspection NotOptimalIfConditionsInspection */
                     if (!isset($this->primaryKey)){
                         $this->primaryKey = [];
@@ -97,7 +95,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         }
 
         foreach ($this->fields as $fieldName=>$fieldFlags){
-            if (($fieldFlags & self::AUTO_INCREMENT) > 0){
+            if (($fieldFlags & FieldInterface::AUTO_INCREMENT) > 0){
                 $this->autoIncrementField = $fieldName;
                 break;
             }
@@ -160,7 +158,6 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
         return $this->insertIgnore;
     }
 
-
     /**
      * @return string
      */
@@ -178,6 +175,15 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     }
 
     /**
+     * @param array $connectionString
+     * @throws Exception
+     */
+    public function setStandaloneConnection(array $connectionString): void
+    {
+        $this->executor->setStandaloneConnection($connectionString);
+    }
+
+    /**
      * @param string $fieldName
      * @param int $status
      * @return bool
@@ -186,17 +192,18 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     {
         $fieldFlags = $this->fields[$fieldName];
         return
-            ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & TableInterface::TIME_CREATE))
+            ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & FieldInterface::TIME_CREATE))
             ||
-            ($fieldFlags & TableInterface::TIME_UPDATE);
+            ($fieldFlags & FieldInterface::TIME_UPDATE);
     }
 
     /**
      * @param array $records
      * @param bool $delete
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function update(array &$records, bool $delete=false): void {
+    public function update(array &$records, bool $delete=false): void
+    {
         $isSingle = false;
 
         if (isset($records) && count($records) > 0){
@@ -205,6 +212,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                 $records = [$records];
             }
 
+            $atLeastOneUpdatedRecord = false;
             $onlyInsertOrUpdate = true;
             $oneSql = $this->query->generateInsertOnDuplicateUpdateStart();
             foreach ($records as $recordKey=>$record) {
@@ -214,9 +222,11 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                     $status = RecordFacade::getStatus($record);
                 }
 
-                if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED) {
-                    $oneSql .= $this->query->generateInsertOnDuplicateUpdateRecord($record);
+                if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED){
+                    $atLeastOneUpdatedRecord = true;
+                }
 
+                if ($status !== RecordFacade::RECORD_STATUS_UNCHANGED) {
                     $records[$recordKey]['_sql'] = [];
                     $records[$recordKey]['_sql']['status'] = $status;
 
@@ -240,23 +250,19 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
                     }
 
                     foreach ($parametersToUse as $parameter){
-                        if (count($parameters) === 0){
+                        if (count($parameters) === 0) {
                             $parameters[] = $parameter;
-                        } elseif (array_key_exists($parameter, $record)){
-                            if ($status === RecordFacade::RECORD_STATUS_NEW || $status === RecordFacade::RECORD_STATUS_UPDATED){
-                                /** @noinspection NotOptimalIfConditionsInspection */
-                                if ($this->isTimingField($parameter, $status)){
-                                    $record[$parameter] = date('Y-m-d H:i:s');
-                                }
-                            }
-                            $parameters[] = $record[$parameter];
-                        } elseif ($this->isTimingField($parameter, $status)){
+                        } elseif ($this->isTimingField($parameter, $status)) {
                             $record[$parameter] = date('Y-m-d H:i:s');
-                            $parameters[] = date('Y-m-d H:i:s');
+                            $parameters[] = $record[$parameter];
+                        } elseif (array_key_exists($parameter, $record)){
+                            $parameters[] = $record[$parameter];
                         } else {
                             $parameters[] = null;
                         }
                     }
+
+                    $oneSql .= $this->query->generateInsertOnDuplicateUpdateRecord($record);
                     $records[$recordKey]['_sql']['parameters'] = $parameters;
                 }
             }
@@ -264,11 +270,14 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
             $oneSql = substr($oneSql, 0, -1);
             $oneSql .= $this->query->generateInsertOnDuplicateUpdateEnd();
 
-            if ($onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
-                $this->sql = $oneSql;
-                $this->functions->runSql();
-            } else {
-                $this->functions->runUpdate($records);
+            if ($atLeastOneUpdatedRecord) {
+                if ($onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
+                    $this->parameters = [];
+                    $this->sql = $oneSql;
+                    $this->functions->runSql();
+                } else {
+                    $this->functions->runUpdate($records);
+                }
             }
         }
 
@@ -279,19 +288,21 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
     /**
      * @param array $records
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function delete(array $records): void {
+    public function delete(array $records): void
+    {
         $this->update($records, true);
     }
 
     /**
      * @param $id
      * @return array
-     * @throws DbRecordNotFoundException
-     * @throws DbSqlException
+     * @throws RecordNotFoundException
+     * @throws Exception
      */
-    public function loadFromId($id): array {
+    public function loadById($id): array
+    {
         $this->sql = $this->query->generateSelectStatement();
         $this->parameters = $this->query->generateSelectParameters();
         $this->parameters[1] = $id;
@@ -300,26 +311,42 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
     }
 
     /**
+     * @param $id
      * @return array
-     * @throws DbSqlException
+     * @throws RecordNotFoundException
+     * @throws Exception
+     * @deprecated
      */
-    public function loadAll(): array {
+    public function loadFromId($id): array
+    {
+        return $this->loadById($id);
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     */
+    public function loadAll(): array
+    {
         $this->sql = 'SELECT * FROM ' . $this->tableName . ';';
+        $this->parameters = [];
 
         return $this->functions->runRead();
     }
 
     /**
      * @return int
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function count(): int {
+    public function count(): int
+    {
         $this->sql = 'SELECT count(*) as counter FROM ' . $this->tableName . ';';
+        $this->parameters = [];
 
         try {
             $responseArray = $this->functions->runReadSingle();
             $response = $responseArray['counter'];
-        } catch (DbRecordNotFoundException $e) {
+        } catch (RecordNotFoundException) {
             $response = 0;
         }
 
@@ -332,9 +359,14 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param string $joinedTableForeignKeyName
      * @param int $joinedTablePrimaryKeyValue
      * @return array|null
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function getFirstLevelJoin(string $joinedTableName, string $joinedTablePrimaryKeyName, string $joinedTableForeignKeyName, int $joinedTablePrimaryKeyValue) : ?array
+    public function getFirstLevelJoin(
+        string $joinedTableName,
+        string $joinedTablePrimaryKeyName,
+        string $joinedTableForeignKeyName,
+        int $joinedTablePrimaryKeyValue
+    ) : ?array
     {
         if (count($this->primaryKey) > 1){
             return null;
@@ -342,7 +374,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
 
         $primaryKey = array_key_first($this->primaryKey);
 
-        $this->sql = 'SELECT ' . $this->tableName . '.* '
+        $this->sql = 'SELECT ' . $joinedTableName . '.*, ' . $this->tableName . '.* '
             . 'FROM ' . $this->tableName . ' '
             . 'JOIN ' . $joinedTableName . ' ON ' . $this->tableName . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
             . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?;';
@@ -356,7 +388,7 @@ abstract class AbstractTable implements TableInterface, GenericQueriesInterface
      * @param string $fieldName
      * @param $fieldValue
      * @return array
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function loadByField(string $fieldName, $fieldValue) : array
     {

@@ -1,19 +1,21 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
+use JetBrains\PhpStorm\Pure;
 
 class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 {
-    /** @var TableInterface  */
-    private TableInterface $table;
+    /** @var MySqlTableInterface  */
+    private MySqlTableInterface $table;
 
     /**
      * SQLQueryCreationFacade constructor.
-     * @param TableInterface $table
+     * @param MySqlTableInterface $table
      */
-    public function __construct(TableInterface $table)
+    public function __construct(MySqlTableInterface $table)
     {
         $this->table = $table;
     }
@@ -61,7 +63,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateSelectStatement(): string {
+    public function generateSelectStatement(): string
+    {
         $response = $this->SELECT();
 
         if ($this->table->getPrimaryKey() !== null) {
@@ -83,13 +86,14 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @param int|string $fieldType
      * @return string
      */
-    public function convertFieldType($fieldType): string {
+    #[Pure] public function convertFieldType(int|string $fieldType): string
+    {
         if (is_int($fieldType)){
-            if (($fieldType & TableInterface::INTEGER) > 0){
+            if (($fieldType & FieldInterface::INTEGER) > 0){
                 $fieldType = 'i';
-            } elseif (($fieldType & TableInterface::DOUBLE) > 0){
+            } elseif (($fieldType & FieldInterface::DOUBLE) > 0){
                 $fieldType = 'd';
-            } elseif (($fieldType & TableInterface::STRING) > 0){
+            } elseif (($fieldType & FieldInterface::STRING) > 0){
                 $fieldType = 's';
             } else {
                 $fieldType = 'b';
@@ -102,7 +106,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateSelectParameters(): array {
+    public function generateSelectParameters(): array
+    {
         $response = [];
 
         $response[] = '';
@@ -119,7 +124,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return bool
      */
-    public function canUseInsertOnDuplicate(): bool {
+    public function canUseInsertOnDuplicate(): bool
+    {
         if ($this->table->getPrimaryKey() !== null) {
             foreach ($this->table->getTableFields() as $fieldName => $fieldType) {
                 if (!array_key_exists($fieldName, $this->table->getPrimaryKey())) {
@@ -133,7 +139,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertOnDuplicateUpdateStart(): string {
+    public function generateInsertOnDuplicateUpdateStart(): string
+    {
         $response = $this->INSERT() . ' (';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -151,7 +158,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @param array $record
      * @return string
      */
-    public function generateInsertOnDuplicateUpdateRecord(array $record): string {
+    public function generateInsertOnDuplicateUpdateRecord(array $record): string
+    {
         $response = '(';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -166,7 +174,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
             }
 
             if ($fieldValue !== 'NULL' && ($fieldType === 's' || $fieldType === 'b')){
-                $response .= '\'' . $fieldValue . '\',';
+                $response .= '\'' . str_replace('\'', '\\\'', $fieldValue) . '\',';
             } else {
                 $response .= $fieldValue . ',';
             }
@@ -180,7 +188,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertOnDuplicateUpdateEnd(): string {
+    public function generateInsertOnDuplicateUpdateEnd(): string
+    {
         $response = ' ON DUPLICATE KEY UPDATE ';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -199,7 +208,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateInsertStatement(): string {
+    public function generateInsertStatement(): string
+    {
         $response = 'INSERT' . $this->table->getInsertIgnore() . ' INTO ' . $this->table->getTableName() . ' (';
 
         $parameterList = '';
@@ -219,7 +229,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateInsertParameters(): array {
+    public function generateInsertParameters(): array
+    {
         $response = [];
 
         $response[] = '';
@@ -236,7 +247,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateDeleteStatement(): string {
+    public function generateDeleteStatement(): string
+    {
         $response = $this->DELETE() . ' WHERE ';
 
         foreach ($this->table->getPrimaryKey() as $fieldName=>$fieldType){
@@ -253,7 +265,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateDeleteParameters(): array {
+    public function generateDeleteParameters(): array
+    {
         $response = [];
 
         $response[] = '';
@@ -270,7 +283,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return string
      */
-    public function generateUpdateStatement(): string {
+    public function generateUpdateStatement(): string
+    {
         $response = $this->UPDATE() . ' ';
 
         foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
@@ -299,7 +313,8 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     /**
      * @return array
      */
-    public function generateUpdateParameters(): array {
+    public function generateUpdateParameters(): array
+    {
         $response = [];
 
         $response[] = '';

@@ -1,26 +1,37 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Services\MySQL\Exceptions\DbSqlException;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use Exception;
 use mysqli_stmt;
 
 interface SQLExecutionFacadeInterface
 {
     /**
      * SQLExecutionFacadeInterface constructor.
-     * @param ServicesFactory $services
-     * @param TableInterface $table
+     * @param ConnectionFactory $connectionFactory
+     * @param MySqlTableInterface $table
      */
-    public function __construct(ServicesFactory $services, TableInterface $table);
+    public function __construct(ConnectionFactory $connectionFactory, MySqlTableInterface $table);
+
+    /**
+     * @param string $databaseName
+     */
+    public function setDatabaseName(string $databaseName): void;
+
+    /**
+     *
+     */
+    public function keepaliveConnection(): void;
 
     /**
      * @param string $sql
      * @param array $parameters
+     * @param int $retry
      * @return mysqli_stmt
-     * @throws DbSqlException
+     * @throws Exception
      */
-    public function executeQuery(string $sql, array $parameters = []): mysqli_stmt;
+    public function executeQuery(string $sql, array $parameters = [], int $retry=0): mysqli_stmt;
 
     /**
      *
@@ -28,9 +39,9 @@ interface SQLExecutionFacadeInterface
     public function rollback() : void;
 
     /**
-     * @return mixed
+     * @return int|null
      */
-    public function getInsertedId();
+    public function getInsertedId(): ?int;
 
     /**
      * @param mysqli_stmt $statement
@@ -40,20 +51,20 @@ interface SQLExecutionFacadeInterface
 
     /**
      * @param bool $enabled
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function toggleAutocommit(bool $enabled = true): void;
 
     /**
      * @param mysqli_stmt $statement
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function closeStatement(mysqli_stmt $statement) : void;
 
     /**
      * @param string $sql
      * @return mysqli_stmt
-     * @throws DbSqlException
+     * @throws Exception
      */
     public function prepareStatement(string $sql) : mysqli_stmt;
 }

@@ -1,100 +1,246 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL;
 
-use CarloNicora\Minimalism\Core\Services\Exceptions\ConfigurationException;
-use CarloNicora\Minimalism\Core\Services\Abstracts\AbstractService;
-use CarloNicora\Minimalism\Core\Services\Exceptions\ServiceNotFoundException;
-use CarloNicora\Minimalism\Core\Services\Factories\ServicesFactory;
-use CarloNicora\Minimalism\Core\Services\Interfaces\ServiceConfigurationsInterface;
-use CarloNicora\Minimalism\Services\MySQL\Configurations\DatabaseConfigurations;
-use CarloNicora\Minimalism\Services\MySQL\Events\MySQLErrorEvents;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\TableInterface;
-use mysqli;
+use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
+use CarloNicora\Minimalism\Interfaces\CacheInterface;
+use CarloNicora\Minimalism\Interfaces\DataInterface;
+use CarloNicora\Minimalism\Interfaces\ServiceInterface;
+use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
+use RuntimeException;
 
-class MySQL extends abstractService {
-    /** @var DatabaseConfigurations  */
-    private DatabaseConfigurations $configData;
+class MySQL implements ServiceInterface, DataInterface
+{
+    /** @var array */
+    private array $tableManagers = [];
 
     /**
-     * abstractApiCaller constructor.
-     * @param serviceConfigurationsInterface $configData
-     * @param servicesFactory $services
-     * @throws serviceNotFoundException
+     * @var ConnectionFactory
      */
-    public function __construct(serviceConfigurationsInterface $configData, servicesFactory $services) {
-        parent::__construct($configData, $services);
+    private ConnectionFactory $connectionFactory;
 
-        /** @noinspection PhpFieldAssignmentTypeMismatchInspection */
-        $this->configData = $configData;
+    /**
+     * MySQL constructor.
+     * @param CacheInterface|null $cache
+     * @param string $MINIMALISM_SERVICE_MYSQL
+     */
+    public function __construct(
+        private ?CacheInterface $cache,
+        string $MINIMALISM_SERVICE_MYSQL
+    )
+    {
+        $this->connectionFactory = new ConnectionFactory($MINIMALISM_SERVICE_MYSQL);
+    }
+
+
+    /**
+     * @param CacheInterface $cache
+     */
+    public function setCacheInterface(CacheInterface $cache): void
+    {
+        $this->cache = $cache;
     }
 
     /**
      * @param string $dbReader
-     * @return TableInterface
-     * @throws Exception|ConfigurationException
+     * @return MySqlTableInterface
+     * @throws Exception
      */
-    public function create(string $dbReader): TableInterface {
-        if (array_key_exists($dbReader, $this->configData->tableManagers)) {
-            return $this->configData->tableManagers[$dbReader];
+    public function create(string $dbReader): MySqlTableInterface
+    {
+        if (array_key_exists($dbReader, $this->tableManagers)) {
+            return $this->tableManagers[$dbReader];
         }
 
         if (!class_exists($dbReader)) {
-            $this->services->logger()->error()
-                ->log(MySQLErrorEvents::ERROR_READER_CLASS_NOT_FOUND($dbReader))
-                ->throw(ConfigurationException::class, 'Reader class missing');
+            throw new RuntimeException('Database reader class missing', 500);
         }
 
-        /** @var TableInterface $response */
-        $response = new $dbReader($this->services);
+        /** @var MySqlTableInterface $response */
+        $response = new $dbReader($this->connectionFactory);
         $response->initialiseAttributes();
 
         $databaseName = $response->getDbToUse();
-        $connection = $this->configData->getDatabase($databaseName);
 
-        if (!isset($connection)) {
-            $dbConf = $this->configData->getDatabaseConnectionString($databaseName);
-
-            if (empty($dbConf)) {
-                $this->services->logger()->error()
-                    ->log(MySQLErrorEvents::ERROR_MISSING_CONNECTION_DETAILS($databaseName))
-                    ->throw(ConfigurationException::class, 'Connection details missing');
-            }
-
-            $connection = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
-
-            $connection->connect($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
-
-            if ($connection->connect_errno) {
-                $this->services->logger()->error()
-                    ->log(MySQLErrorEvents::ERROR_CONNECTION_ERROR($databaseName, $connection->connect_errno, $connection->connect_error))
-                    ->throw(ConfigurationException::class, 'Error connecting to the database');
-            }
-
-            $connection->set_charset('utf8mb4');
-
-            $this->configData->setDatabase($databaseName, $connection);
-        }
+        $connection = $this->connectionFactory->getDatabase($databaseName);
 
         $response->setConnection($connection);
 
-        $this->configData->tableManagers[$dbReader] = $response;
+        $this->tableManagers[$dbReader] = $response;
 
         return $response;
     }
 
     /**
-     * @param string $databaseConnectionName
-     * @return bool
+     *
      */
-    public function hasConfiguration(string $databaseConnectionName): bool {
-        return !empty($this->configData->databaseConnectionStrings[$databaseConnectionName]);
-    }
+    public function initialise(): void {}
 
     /**
      *
      */
-    public function cleanNonPersistentVariables(): void {
-        $this->configData->resetDatabases();
+    public function destroy(): void
+    {
+        $this->connectionFactory->resetDatabases();
+        $this->tableManagers = [];
+    }
+
+    /**
+     * @param array $parameters
+     * @return array
+     */
+    private function flattenArray(array $parameters): array
+    {
+        $response = [];
+
+        foreach ($parameters ?? [] as $parameter) {
+            $response[] = $parameter;
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return array
+     * @throws Exception|RecordNotFoundException
+     * @noinspection PhpDocRedundantThrowsInspection
+     */
+    public function read(
+        string $tableInterfaceClassName,
+        string $functionName,
+        array $parameters,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): array
+    {
+        $response = null;
+        if ($this->cache !== null
+            &&
+            $cacheBuilder !== null
+            &&
+            $this->cache->useCaching()
+        ) {
+            $response = $this->cache->readArray($cacheBuilder, CacheBuilderInterface::DATA);
+        }
+
+        if ($response === null){
+            $tableInterface = $this->create($tableInterfaceClassName);
+            $parameters = $this->flattenArray($parameters);
+            $response = $tableInterface->{$functionName}(...$parameters);
+
+            if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
+                $this->cache->saveArray($cacheBuilder, $response, CacheBuilderInterface::DATA);
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @return int
+     * @throws Exception
+     */
+    public function count(
+        string $tableInterfaceClassName,
+        string $functionName,
+        array $parameters
+    ): int
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        return $tableInterface->{$functionName}($parameters);
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param array $records
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @throws Exception
+     */
+    public function update(
+        string $tableInterfaceClassName,
+        array $records,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): void
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $tableInterface->update($records);
+
+        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
+            $this->cache->invalidate($cacheBuilder);
+
+            $this->cache->saveArray($cacheBuilder, $records, CacheBuilderInterface::DATA);
+        }
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param array $records
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @throws Exception
+     */
+    public function delete(
+        string $tableInterfaceClassName,
+        array $records,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): void
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $tableInterface->update($records, true);
+
+        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
+            $this->cache->invalidate($cacheBuilder);
+        }
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param array $records
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return array
+     * @throws Exception
+     */
+    public function insert(
+        string $tableInterfaceClassName,
+        array $records,
+        ?CacheBuilderInterface $cacheBuilder = null
+    ): array
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $tableInterface->update($records);
+
+        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
+            $this->cache->invalidate($cacheBuilder);
+
+            $this->cache->saveArray($cacheBuilder, $records, CacheBuilderInterface::DATA);
+        }
+
+        return ($records);
+    }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $functionName
+     * @param array $parameters
+     * @return array|null
+     * @throws Exception|RecordNotFoundException
+     * @noinspection PhpDocRedundantThrowsInspection
+     */
+    public function run(
+        string $tableInterfaceClassName,
+        string $functionName,
+        array $parameters,
+    ): ?array
+    {
+        $tableInterface = $this->create($tableInterfaceClassName);
+        $parameters = $this->flattenArray($parameters);
+        return $tableInterface->{$functionName}(...$parameters);
     }
 }

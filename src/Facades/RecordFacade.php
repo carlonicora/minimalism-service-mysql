@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\RecordFacadeInterface;
+use JetBrains\PhpStorm\Pure;
 
 class RecordFacade implements RecordFacadeInterface
 {
@@ -15,7 +16,7 @@ class RecordFacade implements RecordFacadeInterface
      * @param $record
      * @return int
      */
-    public static function getStatus($record): int
+    #[Pure] public static function getStatus($record): int
     {
         if (array_key_exists('originalValues', $record)){
             $response = self::RECORD_STATUS_UNCHANGED;
@@ -35,7 +36,7 @@ class RecordFacade implements RecordFacadeInterface
     /**
      * @param array $record
      */
-    public static function setOriginalValues(&$record): void
+    public static function setOriginalValues(array &$record): void
     {
         $originalValues = [];
         foreach($record as $fieldName=>$fieldValue){
