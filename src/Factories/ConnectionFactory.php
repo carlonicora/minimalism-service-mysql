@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use mysqli;
@@ -15,7 +16,10 @@ class ConnectionFactory
     /** @var array */
     public array $databaseConnectionStrings = [];
 
-    public function __construct(string $databaseConfigurations)
+    public function __construct(
+        private LoggerInterface $logger,
+        string $databaseConfigurations
+    )
     {
         if (!empty($databaseConfigurations)) {
             $databaseNames = explode(',', $databaseConfigurations);
@@ -32,6 +36,12 @@ class ConnectionFactory
                     ] = explode(',', $databaseConnectionString);
 
                     $this->setDatabaseConnectionString($databaseName, $databaseConnectionParameters);
+
+                    $this->logger->info(
+                        message: 'Database connection read',
+                        domain: 'mysql',
+                        context: ['database name'=>$databaseConnectionParameters['dbName']]
+                    );
                 }
             }
         }
@@ -63,12 +73,22 @@ class ConnectionFactory
         $dbConf = $this->getDatabaseConnectionString($databaseName);
 
         if (empty($dbConf)) {
+            $this->logger->emergency(
+                message: 'Database connection details missing',
+                domain: 'mysql',
+                context: ['database name'=>$databaseName]
+            );
             throw new RuntimeException('Connection details missing', 500);
         }
 
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
         if ($response->connect_errno) {
+            $this->logger->error(
+                message: 'Error connecting to the database',
+                domain: 'mysql',
+                context: ['database name'=>$databaseName]
+            );
             throw new RuntimeException('Error connecting to the database', 500);
         }
 

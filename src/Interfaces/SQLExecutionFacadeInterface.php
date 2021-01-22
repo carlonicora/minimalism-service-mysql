@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use Exception;
 use mysqli_stmt;
@@ -9,10 +10,15 @@ interface SQLExecutionFacadeInterface
 {
     /**
      * SQLExecutionFacadeInterface constructor.
+     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
      * @param MySqlTableInterface $table
      */
-    public function __construct(ConnectionFactory $connectionFactory, MySqlTableInterface $table);
+    public function __construct(
+        LoggerInterface $logger,
+        ConnectionFactory $connectionFactory,
+        MySqlTableInterface $table
+    );
 
     /**
      * @param string $databaseName
@@ -42,12 +48,6 @@ interface SQLExecutionFacadeInterface
      * @return int|null
      */
     public function getInsertedId(): ?int;
-
-    /**
-     * @param mysqli_stmt $statement
-     * @return string
-     */
-    public function getStatementErrors(mysqli_stmt $statement): string;
 
     /**
      * @param bool $enabled

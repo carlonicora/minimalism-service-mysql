@@ -1,13 +1,19 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
+
 interface SQLQueryCreationFacadeInterface
 {
     /**
      * SQLQueryGeneratorInterface constructor.
+     * @param LoggerInterface $logger
      * @param MySqlTableInterface $table
      */
-    public function __construct(MySqlTableInterface $table);
+    public function __construct(
+        LoggerInterface $logger,
+        MySqlTableInterface $table
+    );
 
     /**
      * @return string

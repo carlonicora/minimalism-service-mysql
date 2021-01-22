@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Interfaces\TableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 
@@ -8,9 +9,13 @@ interface MySqlTableInterface extends ConnectivityInterface, TableInterface
 {
     /**
      * abstractDatabaseManager constructor.
+     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
      */
-    public function __construct(ConnectionFactory $connectionFactory);
+    public function __construct(
+        LoggerInterface $logger,
+        ConnectionFactory $connectionFactory
+    );
 
     /**
      * @param array $connectionParameters

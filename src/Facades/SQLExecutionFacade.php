@@ -2,6 +2,7 @@
 
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\ConnectivityInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
@@ -22,10 +23,17 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
 
     /**
      * SQLExecutionFacade constructor.
+     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
      * @param MySqlTableInterface $table
      */
-    public function __construct(private ConnectionFactory $connectionFactory, private MySqlTableInterface $table){}
+    public function __construct(
+        private LoggerInterface $logger,
+        private ConnectionFactory $connectionFactory,
+        private MySqlTableInterface $table
+    ){
+
+    }
 
     /**
      *
@@ -93,6 +101,11 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
             $connectionString['port']);
 
         if ($this->connection->connect_errno) {
+            $this->logger->error(
+                message: 'Error connecting to the database',
+                domain: 'mysql',
+                context: ['database name'=>$connectionString['dbName']]
+            );
             throw new RuntimeException('Error connecting to the database', 503);
         }
 
@@ -120,6 +133,26 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
                 usleep(100000);
                 $this->executeQuery($sql, $parameters, $retry);
             } else {
+                $errors = [
+                    'error number' => $statement->errno,
+                    'error' => $statement->error
+                ];
+                foreach ($statement->error_list as $error) {
+                    $errors[] = [
+                        'error number' => $error['errno'],
+                        'sql state' => $error['sqlstate'],
+                        'error' => $error['error']
+                    ];
+                }
+                $this->logger->error(
+                    message: 'MySQL statement execution failed',
+                    domain: 'mysql',
+                    context: [
+                        'sql'=>$sql,
+                        'parameters'=> json_encode($parameters, JSON_THROW_ON_ERROR),
+                        'errors' => $errors
+                    ]
+                );
                 throw new RuntimeException('MySQL statement execution failed.', 500);
             }
         }
@@ -143,21 +176,6 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         return $this->connection->insert_id;
     }
 
-
-    /**
-     * @param mysqli_stmt $statement
-     * @return string
-     */
-    public function getStatementErrors(mysqli_stmt $statement): string
-    {
-        $errorDetails = 'Error ' . $statement->errno . ' ' . $statement->sqlstate . ': ' . $statement->error . PHP_EOL;
-        foreach ($statement->error_list as $error) {
-            $errorDetails .= 'Error ' . $error['errno'] . ' ' . $error['sqlstate'] . ': ' . $error['error'] . PHP_EOL;
-        }
-
-        return 'Error ' . $statement->errno . ': ' . $statement->error . PHP_EOL . $errorDetails;
-    }
-
     /**
      * @param bool $enabled
      * @throws Exception
@@ -176,6 +194,14 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     public function closeStatement(mysqli_stmt $statement) : void
     {
         if (false === $statement->close()) {
+            $this->logger->error(
+                message: 'MySQL failed to close statement',
+                domain: 'mysql',
+                context: [
+                    'error' => $statement->error,
+                    'error number'=> $statement->errno,
+                ]
+            );
             throw new RuntimeException('MySQL failed to close statement', 500);
         }
     }
@@ -190,6 +216,15 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         $response = $this->connection->prepare($sql);
 
         if ($response === false) {
+            $this->logger->critical(
+                message: 'MySQL statement preparation failed',
+                domain: 'mysql',
+                context: [
+                    'sql' => $sql,
+                    'error number'=> $this->connection->errno,
+                    'error' => $this->connection->error
+                ]
+            );
             throw new RuntimeException('MySQL statement preparation failed', 500);
         }
 

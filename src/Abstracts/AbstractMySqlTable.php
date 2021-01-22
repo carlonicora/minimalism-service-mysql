@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
 use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLExecutionFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLFunctionsFacade;
@@ -14,7 +15,6 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
-use JetBrains\PhpStorm\Pure;
 use mysqli;
 
 abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueriesInterface
@@ -54,14 +54,17 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
 
     /**
      * AbstractTable constructor.
+     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
-     * @throws Exception
      */
-    #[Pure] public function __construct(ConnectionFactory $connectionFactory)
+    public function __construct(
+        private LoggerInterface $logger,
+        ConnectionFactory $connectionFactory
+    )
     {
-        $this->executor = new SQLExecutionFacade($connectionFactory, $this);
-        $this->functions = new SQLFunctionsFacade($this, $this->executor);
-        $this->query = new SQLQueryCreationFacade($this);
+        $this->executor = new SQLExecutionFacade($logger, $connectionFactory, $this);
+        $this->functions = new SQLFunctionsFacade($logger, $this, $this->executor);
+        $this->query = new SQLQueryCreationFacade($logger, $this);
     }
 
     /**

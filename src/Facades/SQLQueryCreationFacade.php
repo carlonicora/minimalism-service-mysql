@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
@@ -13,9 +14,13 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 
     /**
      * SQLQueryCreationFacade constructor.
+     * @param LoggerInterface $logger
      * @param MySqlTableInterface $table
      */
-    public function __construct(MySqlTableInterface $table)
+    public function __construct(
+        private LoggerInterface $logger,
+        MySqlTableInterface $table
+    )
     {
         $this->table = $table;
     }

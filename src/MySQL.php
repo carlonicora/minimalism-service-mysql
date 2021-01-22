@@ -4,6 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL;
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
+use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
@@ -23,15 +24,20 @@ class MySQL implements ServiceInterface, DataInterface
 
     /**
      * MySQL constructor.
+     * @param LoggerInterface $logger
      * @param CacheInterface|null $cache
      * @param string $MINIMALISM_SERVICE_MYSQL
      */
     public function __construct(
+        private LoggerInterface $logger,
         private ?CacheInterface $cache,
         string $MINIMALISM_SERVICE_MYSQL
     )
     {
-        $this->connectionFactory = new ConnectionFactory($MINIMALISM_SERVICE_MYSQL);
+        $this->connectionFactory = new ConnectionFactory(
+            $this->logger,
+            $MINIMALISM_SERVICE_MYSQL
+        );
     }
 
 
@@ -55,11 +61,15 @@ class MySQL implements ServiceInterface, DataInterface
         }
 
         if (!class_exists($dbReader)) {
+            $this->logger->error(
+                message: 'Database reader class missing: ' . $dbReader,
+                domain: 'mysql'
+            );
             throw new RuntimeException('Database reader class missing', 500);
         }
 
         /** @var MySqlTableInterface $response */
-        $response = new $dbReader($this->connectionFactory);
+        $response = new $dbReader($this->logger, $this->connectionFactory);
         $response->initialiseAttributes();
 
         $databaseName = $response->getDbToUse();
