@@ -1,7 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
-use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Facades\RecordFacade;
 use CarloNicora\Minimalism\Services\MySQL\Facades\SQLExecutionFacade;
@@ -16,6 +15,7 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInter
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
 use mysqli;
+use RuntimeException;
 
 abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueriesInterface
 {
@@ -203,9 +203,14 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /**
      * @param array $records
      * @param bool $delete
+     * @param bool $avoidSingleInsert
      * @throws Exception
      */
-    public function update(array &$records, bool $delete=false): void
+    public function update(
+        array &$records,
+        bool $delete=false,
+        bool $avoidSingleInsert=false
+    ): void
     {
         $isSingle = false;
 
@@ -274,7 +279,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
             $oneSql .= $this->query->generateInsertOnDuplicateUpdateEnd();
 
             if ($atLeastOneUpdatedRecord) {
-                if ($onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
+                if (!$avoidSingleInsert && $onlyInsertOrUpdate && !$isSingle && $this->query->canUseInsertOnDuplicate()) {
                     $this->parameters = [];
                     $this->sql = $oneSql;
                     $this->functions->runSql();
@@ -301,38 +306,39 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /**
      * @param $id
      * @return array
-     * @throws RecordNotFoundException
      * @throws Exception
      */
-    public function loadById($id): array
+    public function byId($id): array
     {
         $this->sql = $this->query->generateSelectStatement();
         $this->parameters = $this->query->generateSelectParameters();
         $this->parameters[1] = $id;
 
-        return $this->functions->runReadSingle();
-    }
-
-    /**
-     * @param $id
-     * @return array
-     * @throws RecordNotFoundException
-     * @throws Exception
-     * @deprecated
-     */
-    public function loadFromId($id): array
-    {
-        return $this->loadById($id);
+        return $this->functions->runRead();
     }
 
     /**
      * @return array
      * @throws Exception
      */
-    public function loadAll(): array
+    public function all(): array
     {
         $this->sql = 'SELECT * FROM ' . $this->tableName . ';';
         $this->parameters = [];
+
+        return $this->functions->runRead();
+    }
+
+    /**
+     * @param string $fieldName
+     * @param $fieldValue
+     * @return array
+     * @throws Exception
+     */
+    public function byField(string $fieldName, $fieldValue) : array
+    {
+        $this->sql = 'SELECT * FROM ' . $this->tableName . ' WHERE ' . $fieldName . '=?;';
+        $this->parameters = [$this->query->convertFieldType($this->fields[$fieldName]), $fieldValue];
 
         return $this->functions->runRead();
     }
@@ -346,14 +352,13 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         $this->sql = 'SELECT count(*) as counter FROM ' . $this->tableName . ';';
         $this->parameters = [];
 
-        try {
-            $responseArray = $this->functions->runReadSingle();
-            $response = $responseArray['counter'];
-        } catch (RecordNotFoundException) {
-            $response = 0;
-        }
+        $responseArray = $this->functions->runRead();
 
-        return $response;
+        if (count($responseArray) !== 1){
+            throw new RuntimeException('Count query returns more than one result', 500);
+        }
+        return $responseArray[0]['counter'];
+
     }
 
     /**
@@ -395,9 +400,27 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      */
     public function loadByField(string $fieldName, $fieldValue) : array
     {
-        $this->sql = 'SELECT * FROM ' . $this->tableName . ' WHERE ' . $fieldName . '=?;';
-        $this->parameters = [$this->query->convertFieldType($this->fields[$fieldName]), $fieldValue];
+        return $this->byField($fieldName, $fieldValue);
+    }
 
-        return $this->functions->runRead();
+    /**
+     * @param $id
+     * @return array
+     * @throws Exception
+     * @deprecated
+     */
+    public function loadById($id): array
+    {
+        return $this->byId($id);
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     * @deprecated
+     */
+    public function loadAll(): array
+    {
+        return $this->all();
     }
 }

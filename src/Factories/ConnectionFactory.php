@@ -87,7 +87,7 @@ class ConnectionFactory
             $this->logger->error(
                 message: 'Error connecting to the database',
                 domain: 'mysql',
-                context: ['database name'=>$databaseName]
+                context: ['database name'=>$dbConf['dbName']]
             );
             throw new RuntimeException('Error connecting to the database', 500);
         }

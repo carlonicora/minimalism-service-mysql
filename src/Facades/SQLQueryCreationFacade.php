@@ -5,7 +5,6 @@ use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
-use JetBrains\PhpStorm\Pure;
 
 class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 {
@@ -91,7 +90,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      * @param int|string $fieldType
      * @return string
      */
-    #[Pure] public function convertFieldType(int|string $fieldType): string
+    public function convertFieldType(int|string $fieldType): string
     {
         if (is_int($fieldType)){
             if (($fieldType & FieldInterface::INTEGER) > 0){

@@ -1,7 +1,6 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
-use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLExecutionFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface;
@@ -72,26 +71,6 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
         $this->executor->closeStatement($statement);
 
         return $response;
-    }
-
-    /**
-     * @return array
-     * @throws RecordNotFoundException
-     * @throws Exception
-     */
-    public function runReadSingle(): array
-    {
-        $response = $this->runRead();
-
-        if (count($response) === 0) {
-            throw new RecordNotFoundException('Record not found');
-        }
-
-        if (count($response) > 1) {
-            throw new RecordNotFoundException('Multiple records found');
-        }
-
-        return $response[0];
     }
 
     /**

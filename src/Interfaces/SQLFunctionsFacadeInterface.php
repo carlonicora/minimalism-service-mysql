@@ -25,12 +25,6 @@ interface SQLFunctionsFacadeInterface
     public function runRead() : array;
 
     /**
-     * @return array
-     * @throws Exception
-     */
-    public function runReadSingle() : array;
-
-    /**
      * @throws Exception
      */
     public function runSql(): void;

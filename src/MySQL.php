@@ -6,7 +6,6 @@ use CarloNicora\Minimalism\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
-use CarloNicora\Minimalism\Exceptions\RecordNotFoundException;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
@@ -118,7 +117,7 @@ class MySQL implements ServiceInterface, DataInterface
      * @param array $parameters
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return array
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function read(
@@ -240,7 +239,7 @@ class MySQL implements ServiceInterface, DataInterface
      * @param string $functionName
      * @param array $parameters
      * @return array|null
-     * @throws Exception|RecordNotFoundException
+     * @throws Exception
      * @noinspection PhpDocRedundantThrowsInspection
      */
     public function run(
