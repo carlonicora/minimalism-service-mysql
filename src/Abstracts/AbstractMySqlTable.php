@@ -354,7 +354,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
 
         $responseArray = $this->functions->runRead();
 
-        if (count($responseArray) !== 1){
+        if (array_key_exists(1, $responseArray)){
             throw new RuntimeException('Count query returns more than one result', 500);
         }
         return $responseArray[0]['counter'];
