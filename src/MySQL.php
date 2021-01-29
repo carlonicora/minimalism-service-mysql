@@ -171,16 +171,21 @@ class MySQL implements ServiceInterface, DataInterface
      * @param string $tableInterfaceClassName
      * @param array $records
      * @param CacheBuilderInterface|null $cacheBuilder
+     * @param bool $avoidSingleInsert
      * @throws Exception
      */
     public function update(
         string $tableInterfaceClassName,
         array $records,
-        ?CacheBuilderInterface $cacheBuilder = null
+        ?CacheBuilderInterface $cacheBuilder = null,
+        bool $avoidSingleInsert=false
     ): void
     {
         $tableInterface = $this->create($tableInterfaceClassName);
-        $tableInterface->update($records);
+        $tableInterface->update(
+            records: $records,
+            avoidSingleInsert: $avoidSingleInsert,
+        );
 
         if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
@@ -213,17 +218,22 @@ class MySQL implements ServiceInterface, DataInterface
      * @param string $tableInterfaceClassName
      * @param array $records
      * @param CacheBuilderInterface|null $cacheBuilder
+     * @param bool $avoidSingleInsert
      * @return array
      * @throws Exception
      */
     public function insert(
         string $tableInterfaceClassName,
         array $records,
-        ?CacheBuilderInterface $cacheBuilder = null
+        ?CacheBuilderInterface $cacheBuilder = null,
+        bool $avoidSingleInsert=false
     ): array
     {
         $tableInterface = $this->create($tableInterfaceClassName);
-        $tableInterface->update($records);
+        $tableInterface->update(
+            records: $records,
+            avoidSingleInsert: $avoidSingleInsert
+        );
 
         if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
