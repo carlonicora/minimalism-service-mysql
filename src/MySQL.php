@@ -145,6 +145,8 @@ class MySQL implements ServiceInterface, DataInterface
             if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
                 $this->cache->saveArray($cacheBuilder, $response, CacheBuilderInterface::DATA);
             }
+        } elseif (!array_key_exists(0, $response)){
+            $response = [$response];
         }
 
         return $response;
