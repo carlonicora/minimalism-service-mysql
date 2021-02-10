@@ -3,6 +3,7 @@ namespace CarloNicora\Minimalism\Services\MySQL;
 
 use CarloNicora\Minimalism\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\CacheInterface;
+use CarloNicora\Minimalism\Interfaces\DataFunctionInterface;
 use CarloNicora\Minimalism\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use CarloNicora\Minimalism\Interfaces\ServiceInterface;
@@ -85,7 +86,9 @@ class MySQL implements ServiceInterface, DataInterface
     /**
      *
      */
-    public function initialise(): void {}
+    public function initialise(): void
+    {
+    }
 
     /**
      *
@@ -109,6 +112,23 @@ class MySQL implements ServiceInterface, DataInterface
         }
 
         return $response;
+    }
+
+    /**
+     * @param DataFunctionInterface $dataFunction
+     * @return array
+     * @throws Exception
+     */
+    public function readByDataFunction(
+        DataFunctionInterface $dataFunction,
+    ): array
+    {
+        return $this->read(
+            tableInterfaceClassName: $dataFunction->getClassName(),
+            functionName: $dataFunction->getFunctionName(),
+            parameters: $dataFunction->getParameters(),
+            cacheBuilder: $dataFunction->getCacheBuilder()
+        );
     }
 
     /**
