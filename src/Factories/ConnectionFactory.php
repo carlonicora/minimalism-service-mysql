@@ -3,7 +3,6 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
 use Exception;
-use JetBrains\PhpStorm\Pure;
 use mysqli;
 use RuntimeException;
 use Throwable;
@@ -136,15 +135,9 @@ class ConnectionFactory
      * @param string $databaseName
      * @return null|array
      */
-    #[Pure] private function getDatabaseConnectionString(string $databaseName): ?array
+    private function getDatabaseConnectionString(string $databaseName): ?array
     {
-        $response = null;
-
-        if ($this->databaseConnectionStrings !== null && array_key_exists($databaseName, $this->databaseConnectionStrings)){
-            $response = $this->databaseConnectionStrings[$databaseName];
-        }
-
-        return $response;
+        return $this->databaseConnectionStrings[$databaseName] ?? null;
     }
 
     /**

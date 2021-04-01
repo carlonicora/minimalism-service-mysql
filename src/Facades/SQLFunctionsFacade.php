@@ -41,7 +41,7 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
             $this->executor->toggleAutocommit(false);
             $statement = $this->executor->executeQuery($this->table->getSql(), $this->table->getParameters());
             $this->executor->closeStatement($statement);
-            $this->executor->toggleAutocommit(true);
+            $this->executor->toggleAutocommit();
         } catch (Exception $exception) {
             $this->executor->rollback();
             throw $exception;
@@ -100,7 +100,7 @@ class SQLFunctionsFacade implements SQLFunctionsFacadeInterface
                 }
             }
 
-            $this->executor->toggleAutocommit(true);
+            $this->executor->toggleAutocommit();
         } catch (Exception $exception) {
             $this->executor->rollback();
             throw $exception;

@@ -87,8 +87,8 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
 
         if (!isset($this->primaryKey)){
             foreach ($this->fields as $fieldName=>$fieldFlags){
+                /** @noinspection SuspiciousBinaryOperationInspection */
                 if (($fieldFlags & FieldInterface::PRIMARY_KEY) > 0){
-                    /** @noinspection NotOptimalIfConditionsInspection */
                     if (!isset($this->primaryKey)){
                         $this->primaryKey = [];
                     }
@@ -98,6 +98,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         }
 
         foreach ($this->fields as $fieldName=>$fieldFlags){
+            /** @noinspection SuspiciousBinaryOperationInspection */
             if (($fieldFlags & FieldInterface::AUTO_INCREMENT) > 0){
                 $this->autoIncrementField = $fieldName;
                 break;
@@ -194,6 +195,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     private function isTimingField(string $fieldName, int $status) : bool
     {
         $fieldFlags = $this->fields[$fieldName];
+        /** @noinspection SuspiciousBinaryOperationInspection */
         return
             ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & FieldInterface::TIME_CREATE))
             ||

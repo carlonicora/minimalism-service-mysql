@@ -138,7 +138,6 @@ class MySQL implements ServiceInterface, DataInterface
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return array
      * @throws Exception
-     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function read(
         string $tableInterfaceClassName,
@@ -185,8 +184,7 @@ class MySQL implements ServiceInterface, DataInterface
         array $parameters
     ): int
     {
-        $tableInterface = $this->create($tableInterfaceClassName);
-        return $tableInterface->{$functionName}($parameters);
+        return $this->create($tableInterfaceClassName)->{$functionName}(...$parameters);
     }
 
     /**
@@ -272,7 +270,6 @@ class MySQL implements ServiceInterface, DataInterface
      * @param array $parameters
      * @return array|null
      * @throws Exception
-     * @noinspection PhpDocRedundantThrowsInspection
      */
     public function run(
         string $tableInterfaceClassName,

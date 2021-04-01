@@ -1,5 +1,4 @@
-<?php /** @noinspection PhpDocRedundantThrowsInspection */
-
+<?php
 namespace CarloNicora\Minimalism\Services\MySQL\Facades;
 
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
