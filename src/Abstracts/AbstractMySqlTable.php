@@ -222,6 +222,10 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
                 $records = [$records];
             }
 
+            if (count($records) === 1){
+                $isSingle = true;
+            }
+
             $atLeastOneUpdatedRecord = false;
             $onlyInsertOrUpdate = true;
             $oneSql = $this->query->generateInsertOnDuplicateUpdateStart();
