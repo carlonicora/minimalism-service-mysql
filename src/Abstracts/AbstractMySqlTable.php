@@ -58,8 +58,8 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      * @param ConnectionFactory $connectionFactory
      */
     public function __construct(
-        private LoggerInterface $logger,
-        ConnectionFactory $connectionFactory
+        LoggerInterface $logger,
+        private ConnectionFactory $connectionFactory
     )
     {
         $this->executor = new SQLExecutionFacade($logger, $connectionFactory, $this);
@@ -80,7 +80,17 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         }
 
         if (!isset($this->dbToUse) && isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
-            $this->dbToUse = (string)$fullNameParts[count($fullNameParts)-3];
+            $this->dbToUse = $fullNameParts[count($fullNameParts)-3];
+        }
+
+        $connectionDetails = $this->connectionFactory->getDatabaseConnectionString($this->dbToUse);
+
+        if ($connectionDetails !== null){
+            if (str_contains($this->tableName, '.')){
+                $this->tableName = explode('.', $this->tableName)[1];
+            }
+
+            $this->tableName = $connectionDetails['dbName'] . '.' .  $this->tableName;
         }
 
         $this->executor->setDatabaseName($this->dbToUse);
@@ -216,7 +226,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     {
         $isSingle = false;
 
-        if (isset($records) && count($records) > 0){
+        if (count($records) > 0){
             if (!array_key_exists(0, $records)){
                 $isSingle = true;
                 $records = [$records];
@@ -403,6 +413,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      * @param $fieldValue
      * @return array
      * @throws Exception
+     * @deprecated
      */
     public function loadByField(string $fieldName, $fieldValue) : array
     {
@@ -428,5 +439,22 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     public function loadAll(): array
     {
         return $this->all();
+    }
+
+    /**
+     * @param string $sql
+     * @param array $parameters
+     * @return array|null
+     * @throws Exception
+     */
+    public function runSQL(
+        string $sql,
+        array $parameters,
+    ): array|null
+    {
+        $this->sql = $sql;
+        $this->parameters = $parameters;
+
+        return $this->functions->runRead();
     }
 }

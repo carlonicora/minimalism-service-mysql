@@ -51,4 +51,14 @@ interface MySqlTableInterface extends ConnectivityInterface, TableInterface
      * @return string
      */
     public function getInsertIgnore() : string;
+
+    /**
+     * @param string $sql
+     * @param array $parameters
+     * @return array|null
+     */
+    public function runSQL(
+        string $sql,
+        array $parameters,
+    ): array|null;
 }

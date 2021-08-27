@@ -239,7 +239,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         $refs = [];
 
         foreach ($arr as $key => $value) {
-            $refs[$key] = &$arr[$key];
+            $refs[$key] = &$value;
         }
 
         return $refs;

@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-mysql",
   "description": "MySQL service for minimalism",
-  "version": "4.2.3",
+  "version": "4.3.0-beta1",
   "homepage": "https://carlonicora.com",
   "time": "2019-05-14",
   "license": "MIT",

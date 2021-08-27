@@ -114,8 +114,6 @@ class ConnectionFactory
      */
     public function getDatabase(string $databaseName): mysqli
     {
-        $response = null;
-
         if (!array_key_exists($databaseName, $this->databases)) {
             $response = $this->connect($databaseName);
         } else {
@@ -135,7 +133,7 @@ class ConnectionFactory
      * @param string $databaseName
      * @return null|array
      */
-    private function getDatabaseConnectionString(string $databaseName): ?array
+    public function getDatabaseConnectionString(string $databaseName): ?array
     {
         return $this->databaseConnectionStrings[$databaseName] ?? null;
     }
@@ -167,7 +165,7 @@ class ConnectionFactory
          * @var string $databaseKey
          * @var mysqli $connection
          */
-        foreach ($this->databases as $databaseKey=>$connection){
+        foreach ($this->databases as $connection){
             if ($connection !== null && $connection->ping()){
                 $connection->close();
             }

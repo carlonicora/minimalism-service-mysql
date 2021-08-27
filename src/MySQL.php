@@ -281,4 +281,20 @@ class MySQL implements ServiceInterface, DataInterface
         $parameters = $this->flattenArray($parameters);
         return $tableInterface->{$functionName}(...$parameters);
     }
+
+    /**
+     * @param string $tableInterfaceClassName
+     * @param string $sql
+     * @param array $parameters
+     * @return array|null
+     * @throws Exception
+     */
+    public function runSQL(
+        string $tableInterfaceClassName,
+        string $sql,
+        array $parameters=[],
+    ): array|null{
+
+        return $this->create($tableInterfaceClassName)->runSQL($sql, $parameters);
+    }
 }
