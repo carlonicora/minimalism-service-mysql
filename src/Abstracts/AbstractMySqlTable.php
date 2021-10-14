@@ -14,6 +14,7 @@ use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLFunctionsFacadeInterface
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SQLQueryCreationFacadeInterface;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
+use LogicException;
 use mysqli;
 use RuntimeException;
 
@@ -25,17 +26,17 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /** @var array  */
     protected array $parameters=[];
 
-    /** @var string|null */
-    protected ?string $autoIncrementField=null;
+    /** @var string */
+    protected string $tableName;
 
     /** @var array */
-    protected array $fields;
+    protected static array $fields;
 
     /** @var array|null */
     protected ?array $primaryKey;
 
-    /** @var string */
-    protected string $tableName;
+    /** @var string|null */
+    protected ?string $autoIncrementField=null;
 
     /** @var string  */
     private string $dbToUse;
@@ -62,6 +63,10 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         private ConnectionFactory $connectionFactory
     )
     {
+        if (!isset(static::$fields)) {
+            throw new LogicException(get_class($this) . ' must have a $fields');
+        }
+
         $this->executor = new SQLExecutionFacade($logger, $connectionFactory, $this);
         $this->functions = new SQLFunctionsFacade($logger, $this, $this->executor);
         $this->query = new SQLQueryCreationFacade($logger, $this);
@@ -96,7 +101,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         $this->executor->setDatabaseName($this->dbToUse);
 
         if (!isset($this->primaryKey)){
-            foreach ($this->fields as $fieldName=>$fieldFlags){
+            foreach (static::$fields as $fieldName=>$fieldFlags){
                 /** @noinspection SuspiciousBinaryOperationInspection */
                 if (($fieldFlags & FieldInterface::PRIMARY_KEY) > 0){
                     if (!isset($this->primaryKey)){
@@ -107,7 +112,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
             }
         }
 
-        foreach ($this->fields as $fieldName=>$fieldFlags){
+        foreach (static::$fields as $fieldName=>$fieldFlags){
             /** @noinspection SuspiciousBinaryOperationInspection */
             if (($fieldFlags & FieldInterface::AUTO_INCREMENT) > 0){
                 $this->autoIncrementField = $fieldName;
@@ -127,9 +132,13 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /**
      * @return array
      */
-    public function getTableFields(): array
+    public static function getTableFields(): array
     {
-        return $this->fields;
+        if (! isset(static::$fields)) {
+            throw new LogicException(static::class . ' must have a $fields');
+        }
+
+        return static::$fields;
     }
 
     /**
@@ -204,7 +213,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      */
     private function isTimingField(string $fieldName, int $status) : bool
     {
-        $fieldFlags = $this->fields[$fieldName];
+        $fieldFlags = static::$fields[$fieldName];
         /** @noinspection SuspiciousBinaryOperationInspection */
         return
             ($status === RecordFacade::RECORD_STATUS_NEW && ($fieldFlags & FieldInterface::TIME_CREATE))
@@ -354,7 +363,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     public function byField(string $fieldName, $fieldValue) : array
     {
         $this->sql = 'SELECT * FROM ' . $this->tableName . ' WHERE ' . $fieldName . '=?;';
-        $this->parameters = [$this->query->convertFieldType($this->fields[$fieldName]), $fieldValue];
+        $this->parameters = [$this->query->convertFieldType(static::$fields[$fieldName]), $fieldValue];
 
         return $this->functions->runRead();
     }

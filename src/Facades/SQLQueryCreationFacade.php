@@ -131,7 +131,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     public function canUseInsertOnDuplicate(): bool
     {
         if ($this->table->getPrimaryKey() !== null) {
-            foreach ($this->table->getTableFields() as $fieldName => $fieldType) {
+            foreach ($this->table::getTableFields() as $fieldName => $fieldType) {
                 if (!array_key_exists($fieldName, $this->table->getPrimaryKey())) {
                     return true;
                 }
@@ -147,7 +147,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     {
         $response = $this->INSERT() . ' (';
 
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             $response .= $fieldName . ',';
         }
 
@@ -166,7 +166,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     {
         $response = '(';
 
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             $fieldType = $this->convertFieldType($fieldType);
             $fieldValue = 'NULL';
             if (array_key_exists($fieldName, $record) && $record[$fieldName] !== NULL) {
@@ -196,7 +196,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     {
         $response = ' ON DUPLICATE KEY UPDATE ';
 
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             if (!array_key_exists($fieldName, $this->table->getPrimaryKey() ?? [])) {
                 $response .= $fieldName . '=VALUES(' . $fieldName . '),';
             }
@@ -217,7 +217,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
         $response = 'INSERT' . $this->table->getInsertIgnore() . ' INTO ' . $this->table->getTableName() . ' (';
 
         $parameterList = '';
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             $response .= $fieldName . ',';
             $parameterList .= '?,';
         }
@@ -239,7 +239,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 
         $response[] = '';
 
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             $fieldType = $this->convertFieldType($fieldType);
             $response[0] .= $fieldType;
             $response[] = $fieldName;
@@ -291,7 +291,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
     {
         $response = $this->UPDATE() . ' ';
 
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             if (!array_key_exists($fieldName, $this->table->getPrimaryKey() ?? [])){
                 $response .= $fieldName . '=?,';
             }
@@ -323,7 +323,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
 
         $response[] = '';
 
-        foreach ($this->table->getTableFields() as $fieldName=>$fieldType){
+        foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
             if (!array_key_exists($fieldName, $this->table->getPrimaryKey() ?? [])) {
                 $fieldType = $this->convertFieldType($fieldType);
                 $response[0] .= $fieldType;

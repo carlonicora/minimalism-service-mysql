@@ -25,7 +25,7 @@ interface MySqlTableInterface extends ConnectivityInterface, TableInterface
     /**
      * @return array
      */
-    public function getTableFields() : array;
+    public static function getTableFields() : array;
 
     /**
      * @return string|null
