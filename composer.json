@@ -1,12 +1,12 @@
 {
   "name": "carlonicora/minimalism-service-mysql",
   "description": "MySQL service for minimalism",
-  "version": "5.0.0-beta1",
+  "version": "5.0.0-beta2",
   "homepage": "https://carlonicora.com",
   "time": "2019-05-14",
   "license": "MIT",
   "type": "library",
-  "minimum-stability": "stable",
+  "minimum-stability": "beta",
   "authors": [
     {
       "name": "Carlo Nicora",
@@ -23,7 +23,7 @@
   "require": {
     "php": ">=8.0",
     "ext-mysqli": "*",
-    "carlonicora/minimalism": "~12.2",
+    "carlonicora/minimalism": "~13.0",
     "ext-json": "*"
   }
 }
