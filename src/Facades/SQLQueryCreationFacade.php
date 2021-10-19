@@ -29,7 +29,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function SELECT() : string
     {
-        return 'SELECT * FROM ' . $this->table->getTableName();
+        return 'SELECT * FROM ' . $this->table::getTableName();
     }
 
     /**
@@ -37,7 +37,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function INSERT(): string
     {
-        return 'INSERT INTO ' . $this->table->getTableName();
+        return 'INSERT INTO ' . $this->table::getTableName();
     }
 
     /**
@@ -45,7 +45,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function UPDATE(): string
     {
-        return 'UPDATE ' . $this->table->getTableName() . ' SET';
+        return 'UPDATE ' . $this->table::getTableName() . ' SET';
     }
 
     /**
@@ -53,7 +53,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function DELETE(): string
     {
-        return 'DELETE FROM ' . $this->table->getTableName();
+        return 'DELETE FROM ' . $this->table::getTableName();
     }
 
     /**
@@ -61,7 +61,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function COUNT(): string
     {
-        return 'SELECT count(*) AS counter FROM ' . $this->table->getTableName();
+        return 'SELECT count(*) AS counter FROM ' . $this->table::getTableName();
     }
 
     /**
@@ -214,7 +214,7 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
      */
     public function generateInsertStatement(): string
     {
-        $response = 'INSERT' . $this->table->getInsertIgnore() . ' INTO ' . $this->table->getTableName() . ' (';
+        $response = 'INSERT' . $this->table->getInsertIgnore() . ' INTO ' . $this->table::getTableName() . ' (';
 
         $parameterList = '';
         foreach ($this->table::getTableFields() as $fieldName=>$fieldType){
