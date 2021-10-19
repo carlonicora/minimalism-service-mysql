@@ -27,7 +27,10 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     protected array $parameters=[];
 
     /** @var string */
-    protected string $tableName;
+    protected static string $tableName;
+
+    /** @var array */
+    protected static array $fullTableNames = [];
 
     /** @var array */
     protected static array $fields;
@@ -80,23 +83,22 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         $fullName = get_class($this);
         $fullNameParts = explode('\\', $fullName);
 
-        if (!isset($this->tableName)){
-            $this->tableName = end($fullNameParts);
-        }
-
         if (!isset($this->dbToUse) && isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
             $this->dbToUse = $fullNameParts[count($fullNameParts)-3];
         }
 
-        $connectionDetails = $this->connectionFactory->getDatabaseConnectionString($this->dbToUse);
+        if (! isset(static::$fullTableNames[static::class])) {
+            $connectionDetails = $this->connectionFactory->getDatabaseConnectionString($this->dbToUse);
 
-        if ($connectionDetails !== null){
-            if (str_contains($this->tableName, '.')){
-                $this->tableName = explode('.', $this->tableName)[1];
+            if ($connectionDetails !== null){
+                if (str_contains(static::$tableName, '.')){
+                    static::$tableName = explode('.', static::$tableName)[1];
+                }
+
+                static::$fullTableNames[static::class] = $connectionDetails['dbName'] . '.' .  static::$tableName;
             }
-
-            $this->tableName = $connectionDetails['dbName'] . '.' .  $this->tableName;
         }
+
 
         $this->executor->setDatabaseName($this->dbToUse);
 
@@ -124,9 +126,13 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     /**
      * @return string
      */
-    public function getTableName(): string
+    public static function getTableName(): string
     {
-        return $this->tableName;
+        if (! isset(static::$tableName)) {
+            throw new LogicException(static::class . ' must have a $tableName');
+        }
+
+        return static::$fullTableNames[static::class] ?? static::$tableName;
     }
 
     /**
@@ -348,7 +354,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      */
     public function all(): array
     {
-        $this->sql = 'SELECT * FROM ' . $this->tableName . ';';
+        $this->sql = 'SELECT * FROM ' . static::getTableName() . ';';
         $this->parameters = [];
 
         return $this->functions->runRead();
@@ -362,7 +368,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      */
     public function byField(string $fieldName, $fieldValue) : array
     {
-        $this->sql = 'SELECT * FROM ' . $this->tableName . ' WHERE ' . $fieldName . '=?;';
+        $this->sql = 'SELECT * FROM ' . static::getTableName() . ' WHERE ' . $fieldName . '=?;';
         $this->parameters = [$this->query->convertFieldType(static::$fields[$fieldName]), $fieldValue];
 
         return $this->functions->runRead();
@@ -374,7 +380,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      */
     public function count(): int
     {
-        $this->sql = 'SELECT count(*) as counter FROM ' . $this->tableName . ';';
+        $this->sql = 'SELECT count(*) as counter FROM ' . static::getTableName() . ';';
         $this->parameters = [];
 
         $responseArray = $this->functions->runRead();
@@ -407,9 +413,9 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
 
         $primaryKey = array_key_first($this->primaryKey);
 
-        $this->sql = 'SELECT ' . $joinedTableName . '.*, ' . $this->tableName . '.* '
-            . 'FROM ' . $this->tableName . ' '
-            . 'JOIN ' . $joinedTableName . ' ON ' . $this->tableName . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
+        $this->sql = 'SELECT ' . $joinedTableName . '.*, ' . static::getTableName() . '.* '
+            . 'FROM ' . static::getTableName() . ' '
+            . 'JOIN ' . $joinedTableName . ' ON ' . static::getTableName() . '.' . $primaryKey . '=' . $joinedTableName . '.' . $joinedTableForeignKeyName . ' '
             . 'WHERE ' . $joinedTableName . '.' . $joinedTablePrimaryKeyName . '=?;';
 
         $this->parameters = ['i', $joinedTablePrimaryKeyValue];
