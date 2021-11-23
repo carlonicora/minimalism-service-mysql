@@ -10,14 +10,14 @@ interface SQLExecutionFacadeInterface
 {
     /**
      * SQLExecutionFacadeInterface constructor.
-     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
      * @param MySqlTableInterface $table
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
-        LoggerInterface $logger,
         ConnectionFactory $connectionFactory,
-        MySqlTableInterface $table
+        MySqlTableInterface $table,
+        ?LoggerInterface $logger=null,
     );
 
     /**

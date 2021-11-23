@@ -58,21 +58,21 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
 
     /**
      * AbstractTable constructor.
-     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
-        LoggerInterface $logger,
-        private ConnectionFactory $connectionFactory
+        private ConnectionFactory $connectionFactory,
+        ?LoggerInterface $logger=null,
     )
     {
         if (!isset(static::$fields)) {
             throw new LogicException(get_class($this) . ' must have a $fields');
         }
 
-        $this->executor = new SQLExecutionFacade($logger, $connectionFactory, $this);
-        $this->functions = new SQLFunctionsFacade($logger, $this, $this->executor);
-        $this->query = new SQLQueryCreationFacade($logger, $this);
+        $this->executor = new SQLExecutionFacade($connectionFactory, $this, $logger);
+        $this->functions = new SQLFunctionsFacade($this, $this->executor);
+        $this->query = new SQLQueryCreationFacade($this);
     }
 
     /**

@@ -22,14 +22,14 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
 
     /**
      * SQLExecutionFacade constructor.
-     * @param LoggerInterface $logger
      * @param ConnectionFactory $connectionFactory
      * @param MySqlTableInterface $table
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
-        private LoggerInterface $logger,
         private ConnectionFactory $connectionFactory,
-        private MySqlTableInterface $table
+        private MySqlTableInterface $table,
+        private ?LoggerInterface $logger=null,
     ){
 
     }
@@ -100,7 +100,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
             $connectionString['port']);
 
         if ($this->connection->connect_errno) {
-            $this->logger->error(
+            $this->logger?->error(
                 message: 'Error connecting to the database',
                 domain: 'mysql',
                 context: ['database name'=>$connectionString['dbName']]
@@ -130,6 +130,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
             if ($retry<10 && $this->connection->errno===1213){
                 $retry++;
                 usleep(100000);
+                /** @noinspection UnusedFunctionResultInspection */
                 $this->executeQuery($sql, $parameters, $retry);
             } else {
                 $errors = [
@@ -143,7 +144,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
                         'error' => $error['error']
                     ];
                 }
-                $this->logger->error(
+                $this->logger?->error(
                     message: 'MySQL statement execution failed',
                     domain: 'mysql',
                     context: [
@@ -193,7 +194,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     public function closeStatement(mysqli_stmt $statement) : void
     {
         if (false === $statement->close()) {
-            $this->logger->error(
+            $this->logger?->error(
                 message: 'MySQL failed to close statement',
                 domain: 'mysql',
                 context: [
@@ -215,7 +216,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         $response = $this->connection->prepare($sql);
 
         if ($response === false) {
-            $this->logger->critical(
+            $this->logger?->critical(
                 message: 'MySQL statement preparation failed',
                 domain: 'mysql',
                 context: [
@@ -239,6 +240,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
         $refs = [];
 
         foreach ($arr as $key => $value) {
+            /** @noinspection PhpArrayAccessCanBeReplacedWithForeachValueInspection */
             $refs[$key] = &$arr[$key];
         }
 
