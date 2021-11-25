@@ -25,21 +25,21 @@ class MySQL extends AbstractService implements DataInterface
 
     /**
      * MySQL constructor.
-     * @param LoggerInterface $logger
-     * @param CacheInterface|null $cache
      * @param string $MINIMALISM_SERVICE_MYSQL
+     * @param LoggerInterface|null $logger
+     * @param CacheInterface|null $cache
      */
     public function __construct(
-        private LoggerInterface $logger,
-        private ?CacheInterface $cache,
-        string $MINIMALISM_SERVICE_MYSQL
+        string $MINIMALISM_SERVICE_MYSQL,
+        private ?LoggerInterface $logger=null,
+        private ?CacheInterface $cache=null,
     )
     {
         parent::__construct();
 
         $this->connectionFactory = new ConnectionFactory(
+            $MINIMALISM_SERVICE_MYSQL,
             $this->logger,
-            $MINIMALISM_SERVICE_MYSQL
         );
     }
 
@@ -81,7 +81,7 @@ class MySQL extends AbstractService implements DataInterface
         }
 
         /** @var MySqlTableInterface $response */
-        $response = new $dbReader($this->logger, $this->connectionFactory);
+        $response = new $dbReader($this->connectionFactory, $this->logger);
         $response->initialiseAttributes();
 
         $databaseName = $response->getDbToUse();

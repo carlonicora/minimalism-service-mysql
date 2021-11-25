@@ -16,8 +16,8 @@ class ConnectionFactory
     public array $databaseConnectionStrings = [];
 
     public function __construct(
-        private LoggerInterface $logger,
-        string $databaseConfigurations
+        string $databaseConfigurations,
+        private ?LoggerInterface $logger=null,
     )
     {
         if (!empty($databaseConfigurations)) {
