@@ -1,19 +1,19 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL;
 
+use CarloNicora\Minimalism\Abstracts\AbstractService;
 use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataFunctionInterface;
 use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataInterface;
 use CarloNicora\Minimalism\Interfaces\LoggerInterface;
-use CarloNicora\Minimalism\Interfaces\ServiceInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
 use Exception;
 use RuntimeException;
 
-class MySQL implements ServiceInterface, DataInterface
+class MySQL extends AbstractService implements DataInterface
 {
     /** @var array */
     private array $tableManagers = [];
@@ -35,10 +35,21 @@ class MySQL implements ServiceInterface, DataInterface
         string $MINIMALISM_SERVICE_MYSQL
     )
     {
+        parent::__construct();
+
         $this->connectionFactory = new ConnectionFactory(
             $this->logger,
             $MINIMALISM_SERVICE_MYSQL
         );
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getBaseInterface(
+    ): ?string
+    {
+        return DataInterface::class;
     }
 
 
@@ -82,13 +93,6 @@ class MySQL implements ServiceInterface, DataInterface
         $this->tableManagers[$dbReader] = $response;
 
         return $response;
-    }
-
-    /**
-     *
-     */
-    public function initialise(): void
-    {
     }
 
     /**
