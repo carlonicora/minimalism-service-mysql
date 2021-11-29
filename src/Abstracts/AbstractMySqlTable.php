@@ -335,27 +335,27 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     }
 
     /**
-     * @param $id
      * @return array
      * @throws Exception
      */
-    public function byId($id): array
+    public function readAll(): array
     {
-        $this->sql = $this->query->generateSelectStatement();
-        $this->parameters = $this->query->generateSelectParameters();
-        $this->parameters[1] = $id;
+        $this->sql = 'SELECT * FROM ' . static::getTableName() . ';';
+        $this->parameters = [];
 
         return $this->functions->runRead();
     }
 
     /**
+     * @param $id
      * @return array
      * @throws Exception
      */
-    public function all(): array
+    public function readById($id): array
     {
-        $this->sql = 'SELECT * FROM ' . static::getTableName() . ';';
-        $this->parameters = [];
+        $this->sql = $this->query->generateSelectStatement();
+        $this->parameters = $this->query->generateSelectParameters();
+        $this->parameters[1] = $id;
 
         return $this->functions->runRead();
     }
@@ -366,7 +366,7 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
      * @return array
      * @throws Exception
      */
-    public function byField(string $fieldName, $fieldValue) : array
+    public function readByField(string $fieldName, $fieldValue) : array
     {
         $this->sql = 'SELECT * FROM ' . static::getTableName() . ' WHERE ' . $fieldName . '=?;';
         $this->parameters = [$this->query->convertFieldType(static::$fields[$fieldName]), $fieldValue];
@@ -424,39 +424,6 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
     }
 
     /**
-     * @param string $fieldName
-     * @param $fieldValue
-     * @return array
-     * @throws Exception
-     * @deprecated
-     */
-    public function loadByField(string $fieldName, $fieldValue) : array
-    {
-        return $this->byField($fieldName, $fieldValue);
-    }
-
-    /**
-     * @param $id
-     * @return array
-     * @throws Exception
-     * @deprecated
-     */
-    public function loadById($id): array
-    {
-        return $this->byId($id);
-    }
-
-    /**
-     * @return array
-     * @throws Exception
-     * @deprecated
-     */
-    public function loadAll(): array
-    {
-        return $this->all();
-    }
-
-    /**
      * @param string $sql
      * @param array $parameters
      * @return array|null
@@ -471,5 +438,80 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
         $this->parameters = $parameters;
 
         return $this->functions->runRead();
+    }
+
+
+
+
+
+
+
+    /**
+     * @param $id
+     * @return array
+     * @throws Exception
+     * @deprecated
+     * @noinspection OverridingDeprecatedMethodInspection
+     */
+    public function byId($id): array
+    {
+        return $this->readById($id);
+    }
+
+    /**
+     * @param $id
+     * @return array
+     * @throws Exception
+     * @deprecated
+     */
+    public function loadById($id): array
+    {
+        return $this->readById($id);
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     * @deprecated
+     * @noinspection OverridingDeprecatedMethodInspection
+     */
+    public function all(): array
+    {
+        return $this->readAll();
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     * @deprecated
+     */
+    public function loadAll(): array
+    {
+        return $this->readAll();
+    }
+
+    /**
+     * @param string $fieldName
+     * @param $fieldValue
+     * @return array
+     * @throws Exception
+     * @deprecated
+     * @noinspection OverridingDeprecatedMethodInspection
+     */
+    public function byField(string $fieldName, $fieldValue) : array
+    {
+        return $this->readByField($fieldName, $fieldValue);
+    }
+
+    /**
+     * @param string $fieldName
+     * @param $fieldValue
+     * @return array
+     * @throws Exception
+     * @deprecated
+     */
+    public function loadByField(string $fieldName, $fieldValue) : array
+    {
+        return $this->readByField($fieldName, $fieldValue);
     }
 }

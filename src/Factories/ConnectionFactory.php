@@ -166,8 +166,11 @@ class ConnectionFactory
          * @var mysqli $connection
          */
         foreach ($this->databases as $connection){
-            if ($connection !== null && $connection->ping()){
-                $connection->close();
+            try {
+                if ($connection !== null && $connection->ping()) {
+                    $connection->close();
+                }
+            } catch (Exception|Throwable) {
             }
         }
 
