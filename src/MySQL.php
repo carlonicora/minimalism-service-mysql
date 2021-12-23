@@ -100,6 +100,7 @@ class MySQL extends AbstractService implements DataInterface
      */
     public function destroy(): void
     {
+        parent::destroy();
         $this->connectionFactory->resetDatabases();
         $this->tableManagers = [];
     }
