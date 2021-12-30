@@ -205,7 +205,6 @@ class SQLQueryCreationFacade implements SQLQueryCreationFacadeInterface
         return ($response);
     }
 
-
     /**
      * @return string
      */

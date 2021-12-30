@@ -43,6 +43,4 @@ class RecordFacade implements RecordFacadeInterface
         }
         $record['originalValues'] = $originalValues;
     }
-
-
 }

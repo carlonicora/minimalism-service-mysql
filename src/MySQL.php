@@ -52,7 +52,6 @@ class MySQL extends AbstractService implements DataInterface
         return DataInterface::class;
     }
 
-
     /**
      * @param CacheInterface $cache
      */
@@ -73,7 +72,7 @@ class MySQL extends AbstractService implements DataInterface
         }
 
         if (!class_exists($dbReader)) {
-            $this->logger->error(
+            $this->logger?->error(
                 message: 'Database reader class missing: ' . $dbReader,
                 domain: 'mysql'
             );

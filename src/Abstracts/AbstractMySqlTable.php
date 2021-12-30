@@ -99,7 +99,6 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
             }
         }
 
-
         $this->executor->setDatabaseName($this->dbToUse);
 
         if (!isset($this->primaryKey)){
@@ -439,12 +438,6 @@ abstract class AbstractMySqlTable implements MySqlTableInterface, GenericQueries
 
         return $this->functions->runRead();
     }
-
-
-
-
-
-
 
     /**
      * @param $id

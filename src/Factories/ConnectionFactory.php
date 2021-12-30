@@ -36,7 +36,7 @@ class ConnectionFactory
 
                     $this->setDatabaseConnectionString($databaseName, $databaseConnectionParameters);
 
-                    $this->logger->info(
+                    $this->logger?->info(
                         message: 'Database connection read',
                         domain: 'mysql',
                         context: ['database name'=>$databaseConnectionParameters['dbName']]
@@ -72,7 +72,7 @@ class ConnectionFactory
         $dbConf = $this->getDatabaseConnectionString($databaseName);
 
         if (empty($dbConf)) {
-            $this->logger->emergency(
+            $this->logger?->emergency(
                 message: 'Database connection details missing',
                 domain: 'mysql',
                 context: ['database name'=>$databaseName]
@@ -83,7 +83,7 @@ class ConnectionFactory
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
         if ($response->connect_errno) {
-            $this->logger->error(
+            $this->logger?->error(
                 message: 'Error connecting to the database',
                 domain: 'mysql',
                 context: ['database name'=>$dbConf['dbName']]
