@@ -122,11 +122,11 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
     {
         $statement = $this->prepareStatement($sql);
 
-        if (false === empty($parameters)) {
+        if (!empty($parameters)) {
             call_user_func_array([$statement, 'bind_param'], $this->refValues($parameters));
         }
 
-        if (false === $statement->execute()) {
+        if (!$statement->execute()) {
             if ($retry<10 && $this->connection->errno===1213){
                 $retry++;
                 usleep(100000);
@@ -182,7 +182,7 @@ class SQLExecutionFacade implements SQLExecutionFacadeInterface, ConnectivityInt
      */
     public function toggleAutocommit(bool $enabled = true): void
     {
-        if (false === $this->connection->autocommit($enabled)) {
+        if (!$this->connection->autocommit($enabled)) {
             throw new RuntimeException('Autocommit failed', 500);
         }
     }
