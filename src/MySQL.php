@@ -35,8 +35,6 @@ class MySQL extends AbstractService implements DataInterface
         private ?CacheInterface $cache=null,
     )
     {
-        parent::__construct();
-
         $this->connectionFactory = new ConnectionFactory(
             $MINIMALISM_SERVICE_MYSQL,
             $this->logger,
