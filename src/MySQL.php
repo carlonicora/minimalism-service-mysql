@@ -212,8 +212,6 @@ class MySQL extends AbstractService implements DataInterface
 
         if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
-
-            $this->cache->saveArray($cacheBuilder, $records, CacheType::Data);
         }
     }
 
@@ -260,8 +258,6 @@ class MySQL extends AbstractService implements DataInterface
 
         if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
             $this->cache->invalidate($cacheBuilder);
-
-            $this->cache->saveArray($cacheBuilder, $records, CacheType::Data);
         }
 
         return ($records);
