@@ -7,7 +7,6 @@ use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlExecutionInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
@@ -16,7 +15,7 @@ use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
 use Exception;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 
-class MySQL extends AbstractService implements SqlExecutionInterface
+class MySQL extends AbstractService implements SqlInterface
 {
     /** @var ConnectionFactory  */
     private ConnectionFactory $connectionFactory;

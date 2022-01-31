@@ -17,14 +17,14 @@ class SqlUpdateStatementCommand extends AbstractSqlStatementCommand
 
         $data = $object->export();
 
-        $this->factory->update($object->getTableInterfaceClass()::tableName);
+        $this->factory->update($this->table);
 
         foreach ($this->regularFields as $field){
-            $this->factory->addParameter($field, $data[$field->getFieldName()]);
+            $this->factory->addParameter($field, $data[$field->value]);
         }
 
         foreach ($this->primaryKeys as $field){
-            $this->factory->addParameter($field, $data[$field->getFieldName()]);
+            $this->factory->addParameter($field, $data[$field->value]);
         }
     }
 }

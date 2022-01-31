@@ -24,7 +24,7 @@ class SqlCommand
         SqlFactoryInterface|DataObjectInterface $factory,
     )
     {
-        $this->connection = $connectionFactory->create($factory->getTableInterfaceClass());
+        $this->connection = $connectionFactory->create($factory->getTable());
     }
 
     /**
@@ -112,8 +112,8 @@ class SqlCommand
         } elseif ($databaseOperationType === DatabaseOperationType::Create) {
             $response = $factory->export();
 
-            if (($factory->getTableInterfaceClass())->getAutoIncrementField() !== null){
-                $response[($factory->getTableInterfaceClass())->getAutoIncrementField()->value] = $this->getInsertedId();
+            if (($factory->getTable())->getAutoIncrementField() !== null){
+                $response[($factory->getTable())->getAutoIncrementField()->value] = $this->getInsertedId();
             }
 
             $this->setOriginalValues($response);

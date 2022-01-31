@@ -17,11 +17,11 @@ class SqlCreateStatementCommand extends AbstractSqlStatementCommand
 
         $data = $object->export();
 
-        $this->factory->insert($object->getTableInterfaceClass()::tableName);
+        $this->factory->insert($this->table);
 
         foreach (array_merge($this->primaryKeys, $this->regularFields) as $field){
             if ($field !== $this->autoIncrementField){
-                $this->factory->addParameter($field, $data[$field->getFieldName()]);
+                $this->factory->addParameter($field, $data[$field->value]);
             }
         }
     }

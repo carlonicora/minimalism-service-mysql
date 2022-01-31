@@ -17,10 +17,10 @@ class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
 
         $data = $object->export();
 
-        $this->factory->delete($object->getTableInterfaceClass()::tableName);
+        $this->factory->delete($this->table);
 
         foreach ($this->primaryKeys as $field){
-            $this->factory->addParameter($field, $data[$field->getFieldName()]);
+            $this->factory->addParameter($field, $data[$field->value]);
         }
     }
 }

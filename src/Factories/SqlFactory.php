@@ -12,6 +12,9 @@ class SqlFactory implements SqlFactoryInterface
     /** @var DatabaseOperationType  */
     private DatabaseOperationType $databaseOperationType;
 
+    /** @var SqlTableInterface  */
+    private SqlTableInterface $table;
+
     /** @var string|null  */
     private ?string $sql=null;
 
@@ -40,15 +43,6 @@ class SqlFactory implements SqlFactoryInterface
     private array $orderBy=[];
 
     /**
-     * @param SqlTableInterface $table
-     */
-    public function __construct(
-        private SqlTableInterface $table,
-    )
-    {
-    }
-
-    /**
      * @return SqlTableInterface
      */
     public function getTable(
@@ -65,6 +59,7 @@ class SqlFactory implements SqlFactoryInterface
         SqlTableInterface $table,
     ): void
     {
+        $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
         $this->from = 'FROM ' . $table->getTableName();
@@ -80,6 +75,7 @@ class SqlFactory implements SqlFactoryInterface
         array $fields,
     ): void
     {
+        $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT ';
 
@@ -100,6 +96,7 @@ class SqlFactory implements SqlFactoryInterface
         SqlTableInterface $table,
     ): void
     {
+        $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
         $this->from = 'FROM ' . $table->getTableName();
@@ -113,6 +110,7 @@ class SqlFactory implements SqlFactoryInterface
         SqlTableInterface $table,
     ): void
     {
+        $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
         $this->from = $table->getTableName();
@@ -126,6 +124,7 @@ class SqlFactory implements SqlFactoryInterface
         SqlTableInterface $table,
     ): void
     {
+        $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT INTO';
         $this->from = $table->getTableName();
@@ -196,7 +195,7 @@ class SqlFactory implements SqlFactoryInterface
 
             $response .= ') VALUES (' . $additionalSql . ')';
         } elseif  ($this->databaseOperationType === DatabaseOperationType::Update) {
-            $response .= ' SET';
+            $response .= ' SET ';
             $additionalSql = '';
 
             $isFirstWhere = true;
@@ -205,12 +204,11 @@ class SqlFactory implements SqlFactoryInterface
                     $additionalSql .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field->getFieldName() . '=?';
                     $isFirstWhere = false;
                 } else {
-                    $response = $field->getFieldName() . '=?,';
+                    $response .= $field->getFieldName() . '=?,';
                 }
             }
 
             $response = substr($response, 0, -1);
-            $additionalSql = substr($additionalSql, 0, -1);
 
             $response .= $additionalSql;
         } else {
