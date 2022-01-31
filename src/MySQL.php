@@ -57,6 +57,104 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
+     * @param DataObjectInterface|DataObjectInterface[] $factory
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return array
+     * @throws MinimalismException
+     */
+    public function create(
+        DataObjectInterface|array $factory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+    ): array
+    {
+        return $this->execute(
+            databaseOperationType: DatabaseOperationType::Create,
+            factory: $factory,
+            cacheBuilder: $cacheBuilder,
+        );
+    }
+
+    /**
+     * @param SqlFactoryInterface $factory
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return array
+     * @throws MinimalismException
+     */
+    public function read(
+        SqlFactoryInterface $factory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+    ): array
+    {
+        $response = null;
+        if ($this->cache !== null && $cacheBuilder !== null) {
+            $response = $this->cache->readArray($cacheBuilder, CacheType::Data);
+        }
+
+        if ($response === null){
+            $sqlCommand = new SqlCommand($this->connectionFactory, $factory);
+            try {
+                $response = $sqlCommand->execute(databaseOperationType: DatabaseOperationType::Read, factory: $factory);
+            } finally {
+                $sqlCommand = null;
+            }
+
+            if ($this->cache !== null && $cacheBuilder !== null) {
+                $this->cache->saveArray($cacheBuilder, $response, CacheType::Data);
+            }
+        } elseif ($response !== [] && !array_key_exists(0, $response)){
+            $response = [$response];
+        }
+
+        return $response;
+    }
+
+    /**
+     * @param DataObjectInterface|DataObjectInterface[] $factory
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return void
+     * @throws MinimalismException
+     */
+    public function update(
+        DataObjectInterface|array $factory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+    ): void
+    {
+        if (is_array($factory)) {
+            foreach ($factory as $dataObjectInterface) {
+                if ($dataObjectInterface->isNewObject()) {
+                    throw ExceptionFactory::TryingToUpdateNewObject->create($factory->getTableInterfaceClass());
+                }
+            }
+        }
+
+        /** @noinspection UnusedFunctionResultInspection */
+        $this->execute(
+            databaseOperationType: DatabaseOperationType::Update,
+            factory: $factory,
+            cacheBuilder: $cacheBuilder,
+        );
+    }
+
+    /**
+     * @param SqlFactoryInterface|DataObjectInterface $factory
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @return void
+     * @throws MinimalismException
+     */
+    public function delete(
+        SqlFactoryInterface|DataObjectInterface $factory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+    ): void
+    {
+        /** @noinspection UnusedFunctionResultInspection */
+        $this->execute(
+            databaseOperationType: DatabaseOperationType::Delete,
+            factory: $factory,
+            cacheBuilder: $cacheBuilder,
+        );
+    }
+
+    /**
      * @param DatabaseOperationType $databaseOperationType
      * @param SqlFactoryInterface|DataObjectInterface|DataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
@@ -115,103 +213,5 @@ class MySQL extends AbstractService implements SqlInterface
         }
 
         return ($response);
-    }
-
-    /**
-     * @param DataObjectInterface|DataObjectInterface[] $factory
-     * @param CacheBuilderInterface|null $cacheBuilder
-     * @return array
-     * @throws MinimalismException
-     */
-    public function create(
-        DataObjectInterface|array $factory,
-        ?CacheBuilderInterface $cacheBuilder,
-    ): array
-    {
-        return $this->execute(
-            databaseOperationType: DatabaseOperationType::Create,
-            factory: $factory,
-            cacheBuilder: $cacheBuilder,
-        );
-    }
-
-    /**
-     * @param SqlFactoryInterface $factory
-     * @param CacheBuilderInterface|null $cacheBuilder
-     * @return array
-     * @throws MinimalismException
-     */
-    public function read(
-        SqlFactoryInterface $factory,
-        ?CacheBuilderInterface $cacheBuilder,
-    ): array
-    {
-        $response = null;
-        if ($this->cache !== null && $cacheBuilder !== null) {
-            $response = $this->cache->readArray($cacheBuilder, CacheType::Data);
-        }
-
-        if ($response === null){
-            $sqlCommand = new SqlCommand($this->connectionFactory, $factory);
-            try {
-                $response = $sqlCommand->execute(databaseOperationType: DatabaseOperationType::Read, factory: $factory);
-            } finally {
-                $sqlCommand = null;
-            }
-
-            if ($this->cache !== null && $cacheBuilder !== null) {
-                $this->cache->saveArray($cacheBuilder, $response, CacheType::Data);
-            }
-        } elseif ($response !== [] && !array_key_exists(0, $response)){
-            $response = [$response];
-        }
-
-        return $response;
-    }
-
-    /**
-     * @param DataObjectInterface|DataObjectInterface[] $factory
-     * @param CacheBuilderInterface|null $cacheBuilder
-     * @return void
-     * @throws MinimalismException
-     */
-    public function update(
-        DataObjectInterface|array $factory,
-        ?CacheBuilderInterface $cacheBuilder,
-    ): void
-    {
-        if (is_array($factory)) {
-            foreach ($factory as $dataObjectInterface) {
-                if ($dataObjectInterface->isNewObject()) {
-                    throw ExceptionFactory::TryingToUpdateNewObject->create($factory->getTableInterfaceClass());
-                }
-            }
-        }
-
-        /** @noinspection UnusedFunctionResultInspection */
-        $this->execute(
-            databaseOperationType: DatabaseOperationType::Update,
-            factory: $factory,
-            cacheBuilder: $cacheBuilder,
-        );
-    }
-
-    /**
-     * @param SqlFactoryInterface|DataObjectInterface $factory
-     * @param CacheBuilderInterface|null $cacheBuilder
-     * @return void
-     * @throws MinimalismException
-     */
-    public function delete(
-        SqlFactoryInterface|DataObjectInterface $factory,
-        ?CacheBuilderInterface $cacheBuilder,
-    ): void
-    {
-        /** @noinspection UnusedFunctionResultInspection */
-        $this->execute(
-            databaseOperationType: DatabaseOperationType::Delete,
-            factory: $factory,
-            cacheBuilder: $cacheBuilder,
-        );
     }
 }

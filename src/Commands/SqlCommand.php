@@ -119,8 +119,6 @@ class SqlCommand
             $this->setOriginalValues($response);
         }
 
-        /** CHANGE HERE */
-
         if (false === $statement->close()) {
             throw ExceptionFactory::MySQLCloseFailed->create($statement->error);
         }
