@@ -1,29 +1,31 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
-use CarloNicora\Minimalism\Interfaces\LoggerInterface;
+use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use Exception;
 use mysqli;
-use RuntimeException;
 use Throwable;
 
 class ConnectionFactory
 {
-    /** @var array */
+    /** @var mysqli[] */
     private array $databases = [];
 
     /** @var array */
-    public array $databaseConnectionStrings = [];
+    private array $databaseConnectionStrings = [];
 
+    /**
+     * @param string $databaseConfigurations
+     */
     public function __construct(
         string $databaseConfigurations,
-        private ?LoggerInterface $logger=null,
     )
     {
         if (!empty($databaseConfigurations)) {
             $databaseNames = explode(',', $databaseConfigurations);
             foreach ($databaseNames ?? [] as $databaseName) {
-                if ($this->getDatabaseConnectionString($databaseName) === null) {
+                if (!array_key_exists($databaseName, $this->databaseConnectionStrings)) {
                     $databaseConnectionString = $_ENV[trim($databaseName)];
                     $databaseConnectionParameters = [];
                     [
@@ -34,132 +36,79 @@ class ConnectionFactory
                         $databaseConnectionParameters['port']
                     ] = explode(',', $databaseConnectionString);
 
-                    $this->setDatabaseConnectionString($databaseName, $databaseConnectionParameters);
-
-                    $this->logger?->info(
-                        message: 'Database connection read',
-                        domain: 'mysql',
-                        context: ['database name'=>$databaseConnectionParameters['dbName']]
-                    );
+                    $this->databaseConnectionStrings[$databaseName] = $databaseConnectionParameters;
                 }
             }
         }
     }
 
     /**
-     * @param mysqli $connection
-     * @param string $databaseName
-     * @throws Exception
+     *
      */
-    public function keepalive(mysqli &$connection, string $databaseName): void
+    public function __destruct(
+    )
     {
-        try {
-            if (!$connection->ping()) {
-                $connection = $this->connect($databaseName);
-            }
-        } catch (Exception|Throwable) {
-            $connection = $this->connect($databaseName);
-        }
+        $this->resetDatabases();
     }
 
     /**
-     * @param string $databaseName
-     * @return mysqli
-     * @throws Exception
+     * @param SqlTableInterface $tableInterface
+     * @return string
+     * @throws MinimalismException
      */
-    private function connect(string $databaseName): mysqli
+    private function getDatabaseName(
+        SqlTableInterface $tableInterface,
+    ): string
     {
-        $dbConf = $this->getDatabaseConnectionString($databaseName);
+        $className = get_class($tableInterface);
+        $fullNameParts = explode('\\', $className);
 
-        if (empty($dbConf)) {
-            $this->logger?->emergency(
-                message: 'Database connection details missing',
-                domain: 'mysql',
-                context: ['database name'=>$databaseName]
-            );
-            throw new RuntimeException('Connection details missing', 500);
+        if (isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
+            return $fullNameParts[count($fullNameParts)-3];
         }
+
+        throw ExceptionFactory::MisplacedTableInterfaceClass->create($className);
+    }
+
+    /**
+     * @param SqlTableInterface $tableInterface
+     * @return mysqli
+     * @throws MinimalismException
+     */
+    public function create(
+        SqlTableInterface $tableInterface,
+    ): mysqli
+    {
+        $databaseName = $this->getDatabaseName($tableInterface);
+
+        if (array_key_exists($databaseName, $this->databases)){
+            return $this->databases[$databaseName];
+        }
+
+        if (!array_key_exists($databaseName, $this->databaseConnectionStrings)){
+            throw ExceptionFactory::DatabaseConnectionStringMissing->create($databaseName);
+        }
+
+        $dbConf = $this->databaseConnectionStrings[$databaseName];
 
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
         if ($response->connect_errno) {
-            $this->logger?->error(
-                message: 'Error connecting to the database',
-                domain: 'mysql',
-                context: ['database name'=>$dbConf['dbName']]
-            );
-            throw new RuntimeException('Error connecting to the database', 500);
+            throw ExceptionFactory::ErrorConnectingToTheDatabase->create($dbConf['name']);
         }
 
         $response->set_charset('utf8mb4');
-
-        $this->setDatabase($databaseName, $response);
-
-        return $response;
-    }
-
-    /**
-     * @param string $databaseConnectionName
-     * @return bool
-     */
-    public function hasConfiguration(string $databaseConnectionName): bool
-    {
-        return !empty($this->configData->databaseConnectionStrings[$databaseConnectionName]);
-    }
-
-    /**
-     * @param string $databaseName
-     * @return mysqli
-     * @throws Exception
-     */
-    public function getDatabase(string $databaseName): mysqli
-    {
-        if (!array_key_exists($databaseName, $this->databases)) {
-            $response = $this->connect($databaseName);
-        } else {
-            $response = $this->databases[$databaseName];
-
-            if (!isset($response)) {
-                $response = $this->connect($databaseName);
-            }
-        }
-
-        $this->setDatabase($databaseName, $response);
+        $this->databases[$databaseName] = $response;
 
         return $response;
-    }
 
-    /**
-     * @param string $databaseName
-     * @return null|array
-     */
-    public function getDatabaseConnectionString(string $databaseName): ?array
-    {
-        return $this->databaseConnectionStrings[$databaseName] ?? null;
-    }
-
-    /**
-     * @param string $databaseName
-     * @param array $databaseConnectionParameters
-     */
-    private function setDatabaseConnectionString(string $databaseName, array $databaseConnectionParameters): void
-    {
-        $this->databaseConnectionStrings[$databaseName] = $databaseConnectionParameters;
-    }
-
-    /**
-     * @param string $databaseName
-     * @param mysqli $database
-     */
-    private function setDatabase(string $databaseName, mysqli $database): void
-    {
-        $this->databases[$databaseName] = $database;
     }
 
     /**
      *
      */
-    public function resetDatabases() : void
+    public function resetDatabases(
+    ) : void
     {
         /**
          * @var string $databaseKey
