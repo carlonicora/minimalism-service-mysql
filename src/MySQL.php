@@ -60,21 +60,40 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
+     * @template InstanceOfType
      * @param DataObjectInterface|DataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @return array
-     * @throws MinimalismException
+     * @param class-string<InstanceOfType>|null $returnedObjectInterfaceName
+     * @return InstanceOfType|array
+     * @throws MinimalismException|Exception
      */
     public function create(
         DataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
-    ): array
+        ?string $returnedObjectInterfaceName=null,
+    ): DataObjectInterface|array
     {
-        return $this->execute(
+        $response = $this->execute(
             databaseOperationType: DatabaseOperationType::Create,
             factory: $factory,
             cacheBuilder: $cacheBuilder,
         );
+
+        if ($returnedObjectInterfaceName !== null){
+            if (array_is_list($response)){
+                $response = $this->returnObjectArray(
+                    recordset: $response,
+                    objectType: $returnedObjectInterfaceName,
+                );
+            } else {
+                $response = $this->returnSingleObject(
+                    recordset: $response,
+                    objectType: $returnedObjectInterfaceName,
+                );
+            }
+        }
+
+        return $response;
     }
 
     /**
