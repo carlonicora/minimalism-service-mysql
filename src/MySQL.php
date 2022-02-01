@@ -2,13 +2,16 @@
 namespace CarloNicora\Minimalism\Services\MySQL;
 
 use CarloNicora\Minimalism\Abstracts\AbstractService;
+use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
+use CarloNicora\Minimalism\Objects\ModelParameters;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
@@ -77,13 +80,17 @@ class MySQL extends AbstractService implements SqlInterface
     /**
      * @param SqlFactoryInterface $factory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @return array
-     * @throws MinimalismException
+     * @param string|null $singleReturnedObjectInterfaceName
+     * @param string|null $arrayReturnedObjectInterfaceName
+     * @return DataObjectInterface|array
+     * @throws MinimalismException|Exception
      */
     public function read(
         SqlFactoryInterface $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
-    ): array
+        ?string $singleReturnedObjectInterfaceName=null,
+        ?string $arrayReturnedObjectInterfaceName=null,
+    ): DataObjectInterface|array
     {
         $response = null;
         if ($this->cache !== null && $cacheBuilder !== null) {
@@ -103,6 +110,18 @@ class MySQL extends AbstractService implements SqlInterface
             }
         } elseif ($response !== [] && !array_key_exists(0, $response)){
             $response = [$response];
+        }
+
+        if ($singleReturnedObjectInterfaceName !== null){
+            $response = $this->returnSingleObject(
+                recordset: $response,
+                objectType: $singleReturnedObjectInterfaceName,
+            );
+        } elseif ($arrayReturnedObjectInterfaceName !== null){
+            $response = $this->returnObjectArray(
+                recordset: $response,
+                objectType: $arrayReturnedObjectInterfaceName,
+            );
         }
 
         return $response;
@@ -213,5 +232,82 @@ class MySQL extends AbstractService implements SqlInterface
         }
 
         return ($response);
+    }
+
+    /**
+     * @template InstanceOfType
+     * @param array $recordset
+     * @param class-string<InstanceOfType> $objectType
+     * @return InstanceOfType
+     * @throws Exception
+     */
+    private function returnSingleObject(
+        array $recordset,
+        string $objectType,
+    ): SqlDataObjectInterface
+    {
+        if ($recordset === [] || $recordset === [[]]){
+            throw new MinimalismException(
+                status: HttpCode::NotFound,
+                message: 'Record Not found',
+            );
+        }
+
+        return $this->createObject(
+            objectType: $objectType,
+            record: array_is_list($recordset) ? $recordset[0] : $recordset,
+        );
+    }
+
+    /**
+     * @template InstanceOfType
+     * @param array $recordset
+     * @param class-string<InstanceOfType> $objectType
+     * @return InstanceOfType[]
+     * @throws Exception
+     */
+    private function returnObjectArray(
+        array $recordset,
+        string $objectType,
+    ): array
+    {
+        $response = [];
+
+        if (array_is_list($recordset)) {
+            foreach ($recordset ?? [] as $record) {
+                $response[] = $this->createObject(
+                    objectType: $objectType,
+                    record: $record,
+                );
+            }
+        } else {
+            $response[] = $this->createObject(
+                objectType: $objectType,
+                record: $recordset,
+            );
+        }
+
+        return $response;
+    }
+
+    /**
+     * @template InstanceOfType
+     * @param class-string<InstanceOfType> $objectType
+     * @param array $record
+     * @return InstanceOfType
+     * @throws Exception
+     */
+    private function createObject(
+        string $objectType,
+        array $record,
+    ): SqlDataObjectInterface
+    {
+        $modelParameters = new ModelParameters();
+        $modelParameters->addNamedParameter('data', $record);
+
+        return $this->objectFactory->create(
+            className: $objectType,
+            parameters: $modelParameters
+        );
     }
 }
