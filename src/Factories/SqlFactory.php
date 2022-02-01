@@ -5,7 +5,6 @@ use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
-use Exception;
 
 class SqlFactory implements SqlFactoryInterface
 {
@@ -16,7 +15,7 @@ class SqlFactory implements SqlFactoryInterface
     private static array $dbNames=[];
 
     /** @var string  */
-    private string $databasePrefix='';
+    private string $databasePrefix;
 
     /** @var string|null  */
     private ?string $sql=null;
@@ -52,18 +51,7 @@ class SqlFactory implements SqlFactoryInterface
         private string $tableClass,
     )
     {
-        try {
-            $dbIdentifier = null;
-            $fullNameParts = explode('\\', $tableClass);
-            if (isset($fullNameParts[count($fullNameParts) - 1]) && strtolower($fullNameParts[count($fullNameParts) - 2]) === 'tables') {
-                $dbIdentifier = $fullNameParts[count($fullNameParts) - 3];
-            }
-            if (($dbIdentifier !== null) && array_key_exists($dbIdentifier, self::$dbNames)) {
-                $this->databasePrefix = self::$dbNames[$dbIdentifier] . '.';
-            }
-        } catch (Exception) {
-            $this->databasePrefix = '';
-        }
+        $this->databasePrefix = TableNameFactory::getDatabaseName($this->tableClass, self::$dbNames);
     }
 
     /**
@@ -283,6 +271,7 @@ class SqlFactory implements SqlFactoryInterface
 
         if ($this->databaseOperationType === DatabaseOperationType::Read) {
             foreach ($this->join as $join) {
+                $join->setDbNames(self::$dbNames);
                 $response .= ' ' . $join->getSql();
             }
         }

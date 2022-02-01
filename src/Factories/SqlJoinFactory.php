@@ -4,18 +4,18 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlJoinType;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 
 class SqlJoinFactory implements SqlJoinFactoryInterface
 {
+    /** @var array  */
+    private array $dbNames=[];
+
     /**
-     * @param SqlTableInterface $joinedTable
      * @param SqlFieldInterface $primaryKey
      * @param SqlFieldInterface $foreignKey
      * @param SqlJoinType|null $joinType
      */
     public function __construct(
-        private SqlTableInterface $joinedTable,
         private SqlFieldInterface $primaryKey,
         private SqlFieldInterface $foreignKey,
         private ?SqlJoinType $joinType=null,
@@ -29,8 +29,21 @@ class SqlJoinFactory implements SqlJoinFactoryInterface
     public function getSql(
     ): string
     {
+        $primaryKeyDatabaseName = TableNameFactory::getDatabaseName(get_class($this->primaryKey), $this->dbNames);
+        $foreignKeyDatabaseName = TableNameFactory::getDatabaseName(get_class($this->foreignKey), $this->dbNames);
+        /** @noinspection PhpUndefinedClassConstantInspection */
         return ($this->joinType !== null ? $this->joinType->value . ' JOIN' : 'JOIN')
-            . ' ' . $this->joinedTable->getTableName()
-            . ' ON ' . $this->primaryKey->getFieldName() . '=' . $this->foreignKey->getFieldName();
+            . ' ' . $foreignKeyDatabaseName . $this->foreignKey::tableName
+            . ' ON ' . $primaryKeyDatabaseName . $this->primaryKey->getFieldName() . '=' . $foreignKeyDatabaseName . $this->foreignKey->getFieldName();
+    }
+
+    /**
+     * @param array $dbNames
+     */
+    public function setDbNames(
+        array $dbNames,
+    ): void
+    {
+        $this->dbNames = $dbNames;
     }
 }
