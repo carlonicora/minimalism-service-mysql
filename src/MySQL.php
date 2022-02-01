@@ -78,11 +78,12 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
+     * @template InstanceOfType
      * @param SqlFactoryInterface $factory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @param string|null $singleReturnedObjectInterfaceName
-     * @param string|null $arrayReturnedObjectInterfaceName
-     * @return DataObjectInterface|array
+     * @param class-string<InstanceOfType>|null $singleReturnedObjectInterfaceName
+     * @param class-string<InstanceOfType>|null $arrayReturnedObjectInterfaceName
+     * @return InstanceOfType|array
      * @throws MinimalismException|Exception
      */
     public function read(
