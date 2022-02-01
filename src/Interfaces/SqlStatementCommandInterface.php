@@ -1,15 +1,15 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 
 interface SqlStatementCommandInterface
 {
     /**
-     * @param DataObjectInterface $object
+     * @param SqlDataObjectInterface $object
      */
     public function __construct(
-        DataObjectInterface $object,
+        SqlDataObjectInterface $object,
     );
 
     /**

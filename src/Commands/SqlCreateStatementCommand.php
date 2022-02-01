@@ -1,16 +1,16 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractSqlStatementCommand;
 
 class SqlCreateStatementCommand extends AbstractSqlStatementCommand
 {
     /**
-     * @param DataObjectInterface $object
+     * @param SqlDataObjectInterface $object
      */
     public function __construct(
-        DataObjectInterface $object,
+        SqlDataObjectInterface $object,
     )
     {
         parent::__construct($object);

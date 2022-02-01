@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
@@ -25,10 +25,10 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
     protected array $regularFields;
 
     /**
-     * @param DataObjectInterface $object
+     * @param SqlDataObjectInterface $object
      */
     public function __construct(
-        DataObjectInterface $object,
+        SqlDataObjectInterface $object,
     )
     {
         $this->table = $object->getTable();

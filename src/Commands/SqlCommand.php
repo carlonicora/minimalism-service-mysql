@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
@@ -16,12 +16,12 @@ class SqlCommand
 
     /**
      * @param ConnectionFactory $connectionFactory
-     * @param SqlFactoryInterface|DataObjectInterface $factory
+     * @param SqlFactoryInterface|SqlDataObjectInterface $factory
      * @throws MinimalismException
      */
     public function __construct(
         ConnectionFactory $connectionFactory,
-        SqlFactoryInterface|DataObjectInterface $factory,
+        SqlFactoryInterface|SqlDataObjectInterface $factory,
     )
     {
         $this->connection = $connectionFactory->create($factory->getTable());
@@ -54,14 +54,14 @@ class SqlCommand
 
     /**
      * @param DatabaseOperationType $databaseOperationType
-     * @param SqlFactoryInterface|DataObjectInterface $factory
+     * @param SqlFactoryInterface|SqlDataObjectInterface $factory
      * @param int $retry
      * @return array|null
      * @throws MinimalismException
      */
     public function execute(
         DatabaseOperationType $databaseOperationType,
-        SqlFactoryInterface|DataObjectInterface $factory,
+        SqlFactoryInterface|SqlDataObjectInterface $factory,
         int $retry=0,
     ): ?array
     {
@@ -113,6 +113,7 @@ class SqlCommand
             $response = $factory->export();
 
             if (($factory->getTable())->getAutoIncrementField() !== null){
+                /** @noinspection PhpUndefinedFieldInspection */
                 $response[($factory->getTable())->getAutoIncrementField()->value] = $this->getInsertedId();
             }
 

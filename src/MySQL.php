@@ -7,14 +7,12 @@ use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
 use CarloNicora\Minimalism\Objects\ModelParameters;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
-use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
 use Exception;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 
@@ -61,17 +59,17 @@ class MySQL extends AbstractService implements SqlInterface
 
     /**
      * @template InstanceOfType
-     * @param DataObjectInterface|DataObjectInterface[] $factory
+     * @param SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param class-string<InstanceOfType>|null $returnedObjectInterfaceName
      * @return InstanceOfType|array
      * @throws MinimalismException|Exception
      */
     public function create(
-        DataObjectInterface|array $factory,
+        SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $returnedObjectInterfaceName=null,
-    ): DataObjectInterface|array
+    ): SqlDataObjectInterface|array
     {
         $response = $this->execute(
             databaseOperationType: DatabaseOperationType::Create,
@@ -110,7 +108,7 @@ class MySQL extends AbstractService implements SqlInterface
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $singleReturnedObjectInterfaceName=null,
         ?string $arrayReturnedObjectInterfaceName=null,
-    ): DataObjectInterface|array
+    ): SqlDataObjectInterface|array
     {
         $response = null;
         if ($this->cache !== null && $cacheBuilder !== null) {
@@ -148,24 +146,16 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
-     * @param DataObjectInterface|DataObjectInterface[] $factory
+     * @param SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return void
      * @throws MinimalismException
      */
     public function update(
-        DataObjectInterface|array $factory,
+        SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
     ): void
     {
-        if (is_array($factory)) {
-            foreach ($factory as $dataObjectInterface) {
-                if ($dataObjectInterface->isNewObject()) {
-                    throw ExceptionFactory::TryingToUpdateNewObject->create($factory->getTableInterfaceClass());
-                }
-            }
-        }
-
         /** @noinspection UnusedFunctionResultInspection */
         $this->execute(
             databaseOperationType: DatabaseOperationType::Update,
@@ -175,13 +165,13 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
-     * @param SqlFactoryInterface|DataObjectInterface $factory
+     * @param SqlFactoryInterface|SqlDataObjectInterface $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return void
      * @throws MinimalismException
      */
     public function delete(
-        SqlFactoryInterface|DataObjectInterface $factory,
+        SqlFactoryInterface|SqlDataObjectInterface $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
     ): void
     {
@@ -195,14 +185,14 @@ class MySQL extends AbstractService implements SqlInterface
 
     /**
      * @param DatabaseOperationType $databaseOperationType
-     * @param SqlFactoryInterface|DataObjectInterface|DataObjectInterface[] $factory
+     * @param SqlFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return array|null
      * @throws MinimalismException|Exception
      */
     private function execute(
         DatabaseOperationType                         $databaseOperationType,
-        SqlFactoryInterface|DataObjectInterface|array $factory,
+        SqlFactoryInterface|SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface                        $cacheBuilder,
     ): ?array
     {

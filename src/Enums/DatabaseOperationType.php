@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Enums;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCreateStatementCommand;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlDeleteStatementCommand;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlUpdateStatementCommand;
@@ -17,12 +17,12 @@ enum DatabaseOperationType
     case Delete;
 
     /**
-     * @param DataObjectInterface $object
+     * @param SqlDataObjectInterface $object
      * @return SqlStatementCommandInterface
      * @throws MinimalismException
      */
     public function getSqlStatementCommand(
-        DataObjectInterface $object,
+        SqlDataObjectInterface $object,
     ): SqlStatementCommandInterface
     {
         return match ($this){
