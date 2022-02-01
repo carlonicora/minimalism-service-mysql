@@ -16,6 +16,7 @@ use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
 use Exception;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use Throwable;
 
 class MySQL extends AbstractService implements SqlInterface
 {
@@ -199,6 +200,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return array|null
      * @throws MinimalismException|Exception
+     * @throws Throwable
      */
     private function execute(
         DatabaseOperationType                         $databaseOperationType,
@@ -240,7 +242,7 @@ class MySQL extends AbstractService implements SqlInterface
             }
 
             $sqlCommand?->commit();
-        } catch (Exception $e) {
+        } catch (Exception|Throwable $e) {
             $sqlCommand?->rollback();
             throw $e;
         } finally {
