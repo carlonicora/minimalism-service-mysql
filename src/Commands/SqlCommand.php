@@ -24,7 +24,7 @@ class SqlCommand
         SqlFactoryInterface|SqlDataObjectInterface $factory,
     )
     {
-        $this->connection = $connectionFactory->create($factory->getTable());
+        $this->connection = $connectionFactory->create($factory->getTableClass());
     }
 
     /**

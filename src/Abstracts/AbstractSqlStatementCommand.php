@@ -3,7 +3,6 @@ namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SqlStatementCommandInterface;
 
@@ -12,8 +11,8 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
     /** @var SqlFactory  */
     protected SqlFactory $factory;
 
-    /** @var SqlTableInterface  */
-    protected SqlTableInterface $table;
+    /** @var string  */
+    protected string $tableClass;
 
     /** @var SqlFieldInterface|null  */
     protected ?SqlFieldInterface $autoIncrementField;
@@ -31,18 +30,18 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
         SqlDataObjectInterface $object,
     )
     {
-        $this->table = $object->getTable();
+        $this->tableClass = $object->getTableClass();
 
-        $this->factory = SqlFactory::create($this->table);
-
-        /** @noinspection PhpUndefinedMethodInspection */
-        $this->autoIncrementField = $this->table->getAutoIncrementField();
+        $this->factory = SqlFactory::create($this->tableClass);
 
         /** @noinspection PhpUndefinedMethodInspection */
-        $this->primaryKeys = $this->table->getPrimaryKeyFields();
+        $this->autoIncrementField = $this->tableClass::getAutoIncrementField();
 
         /** @noinspection PhpUndefinedMethodInspection */
-        $this->regularFields = $this->table->getRegularFields();
+        $this->primaryKeys = $this->tableClass::getPrimaryKeyFields();
+
+        /** @noinspection PhpUndefinedMethodInspection */
+        $this->regularFields = $this->tableClass::getRegularFields();
     }
 
     /**

@@ -1,7 +1,8 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Traits;
 
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldTypeInterface;
+use CarloNicora\Minimalism\Services\MySQL\Enums\FieldOption;
+use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
 
 trait SqlFieldTrait
 {
@@ -12,7 +13,7 @@ trait SqlFieldTrait
     ): bool
     {
         /** @noinspection PhpUndefinedMethodInspection */
-        return (($this->getFieldDefinition() & FieldTypeInterface::AutoIncrement) > 0);
+        return (($this->getFieldDefinition() & FieldOption::AutoIncrement->value) > 0);
     }
 
     /**
@@ -36,11 +37,11 @@ trait SqlFieldTrait
         /** @noinspection PhpUndefinedMethodInspection */
         $fieldDefinition = $this->getFieldDefinition();
 
-        if (($fieldDefinition & FieldTypeInterface::Integer) > 0){
+        if (($fieldDefinition & FieldType::Integer->value) > 0){
             $response = 'i';
-        } elseif (($fieldDefinition & FieldTypeInterface::Double) > 0){
+        } elseif (($fieldDefinition & FieldType::Double->value) > 0){
             $response = 'd';
-        } elseif (($fieldDefinition & FieldTypeInterface::Blob) > 0){
+        } elseif (($fieldDefinition & FieldType::Blob->value) > 0){
             $response = 'b';
         }
 

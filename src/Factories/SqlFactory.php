@@ -4,7 +4,6 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use Exception;
 
@@ -47,17 +46,15 @@ class SqlFactory implements SqlFactoryInterface
     private array $orderBy=[];
 
     /**
-     * @param SqlTableInterface $table
+     * @param string $tableClass
      */
     public function __construct(
-        private SqlTableInterface $table,
+        private string $tableClass,
     )
     {
-
         try {
             $dbIdentifier = null;
-            $className = get_class($this->table);
-            $fullNameParts = explode('\\', $className);
+            $fullNameParts = explode('\\', $tableClass);
             if (isset($fullNameParts[count($fullNameParts) - 1]) && strtolower($fullNameParts[count($fullNameParts) - 2]) === 'tables') {
                 $dbIdentifier = $fullNameParts[count($fullNameParts) - 3];
             }
@@ -85,14 +82,14 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @param SqlTableInterface $table
+     * @param string $tableClass
      * @return SqlFactoryInterface
      */
     public static function create(
-        SqlTableInterface $table,
+        string $tableClass,
     ): SqlFactoryInterface
     {
-        return new self($table);
+        return new self($tableClass);
     }
 
     /**
@@ -103,7 +100,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
-        $this->from = 'FROM ' . $this->databasePrefix . $this->table->getName();
+        $this->from = 'FROM ' . $this->databasePrefix . $this->tableClass::tableName;
 
         return $this;
     }
@@ -125,7 +122,7 @@ class SqlFactory implements SqlFactoryInterface
 
         $this->operandAndFields = substr($this->operandAndFields, 0, -1);
 
-        $this->from = 'FROM ' . $this->databasePrefix . $this->table->getName();
+        $this->from = 'FROM ' . $this->databasePrefix . $this->tableClass::tableName;
 
         return $this;
     }
@@ -138,7 +135,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
-        $this->from = 'FROM ' . $this->databasePrefix . $this->table->getName();
+        $this->from = 'FROM ' . $this->databasePrefix . $this->tableClass::tableName;
 
         return $this;
     }
@@ -151,7 +148,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
-        $this->from = $this->databasePrefix . $this->table->getName();
+        $this->from = $this->databasePrefix . $this->tableClass::tableName;
 
         return $this;
     }
@@ -164,7 +161,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT INTO';
-        $this->from = $this->databasePrefix . $this->table->getName();
+        $this->from = $this->databasePrefix . $this->tableClass::tableName;
 
         return $this;
     }
@@ -209,16 +206,13 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @param SqlTableInterface $table
      * @param string $sql
      * @return SqlFactoryInterface
      */
     public function setSql(
-        SqlTableInterface $table,
         string $sql,
     ): SqlFactoryInterface
     {
-        $this->table = $table;
         $this->sql = $sql;
 
         return $this;
@@ -267,12 +261,12 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @return SqlTableInterface
+     * @return string
      */
-    public function getTable(
-    ): SqlTableInterface
+    public function getTableClass(
+    ): string
     {
-        return $this->table;
+        return $this->tableClass;
     }
 
     /**

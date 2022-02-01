@@ -2,33 +2,31 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Traits;
 
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldTypeInterface;
+use CarloNicora\Minimalism\Services\MySQL\Enums\FieldOption;
 
 trait SqlTableTrait
 {
     /**
      * @return string
      */
-    public function getName(
+    public function getTableName(
     ): string
     {
         /** @noinspection PhpUndefinedClassConstantInspection */
-        /** @noinspection PhpAccessingStaticMembersOnTraitInspection */
-        /** @noinspection PhpUndefinedFieldInspection */
-        return self::$tableName;
+        return self::tableName;
     }
 
     /**
      * @return SqlFieldInterface|null
      */
-    public function getAutoIncrementField(
+    public static function getAutoIncrementField(
     ): ?SqlFieldInterface
     {
         /** @noinspection PhpAccessingStaticMembersOnTraitInspection */
         /** @noinspection PhpUndefinedMethodInspection */
         foreach (self::cases() as $case){
             /** @noinspection PhpUndefinedClassConstantInspection */
-            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldTypeInterface::AutoIncrement) > 0) {
+            if (($case->getFieldDefinition() & FieldOption::AutoIncrement->value) > 0) {
                 return $case;
             }
         }
@@ -39,7 +37,7 @@ trait SqlTableTrait
     /**
      * @return SqlFieldInterface[]
      */
-    public function getPrimaryKeyFields(
+    public static function getPrimaryKeyFields(
     ): array
     {
         $response = [];
@@ -48,7 +46,7 @@ trait SqlTableTrait
         /** @noinspection PhpUndefinedMethodInspection */
         foreach (self::cases() as $case){
             /** @noinspection PhpUndefinedClassConstantInspection */
-            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldTypeInterface::PrimaryKey) > 0) {
+            if (($case->getFieldDefinition() & FieldOption::PrimaryKey->value) > 0) {
                 $response[] = $case;
             }
         }
@@ -59,7 +57,7 @@ trait SqlTableTrait
     /**
      * @return SqlFieldInterface[]
      */
-    public function getRegularFields(
+    public static function getRegularFields(
     ): array
     {
         $response = [];
@@ -68,7 +66,7 @@ trait SqlTableTrait
         /** @noinspection PhpUndefinedMethodInspection */
         foreach (self::cases() as $case){
             /** @noinspection PhpUndefinedClassConstantInspection */
-            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldTypeInterface::PrimaryKey) === 0) {
+            if (($case->getFieldDefinition() & FieldOption::PrimaryKey->value) === 0) {
                 $response[] = $case;
             }
         }

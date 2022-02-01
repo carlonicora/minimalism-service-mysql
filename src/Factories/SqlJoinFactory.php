@@ -30,7 +30,7 @@ class SqlJoinFactory implements SqlJoinFactoryInterface
     ): string
     {
         return ($this->joinType !== null ? $this->joinType->value . ' JOIN' : 'JOIN')
-            . ' ' . $this->joinedTable->getName()
+            . ' ' . $this->joinedTable->getTableName()
             . ' ON ' . $this->primaryKey->getFieldName() . '=' . $this->foreignKey->getFieldName();
     }
 }

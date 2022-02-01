@@ -2,7 +2,6 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use Exception;
 use mysqli;
 use Throwable;
@@ -61,15 +60,15 @@ class ConnectionFactory
     }
 
     /**
-     * @param SqlTableInterface $tableInterface
+     * @param string $tableClass
      * @return string
      * @throws MinimalismException
      */
     public function getDatabaseName(
-        SqlTableInterface $tableInterface,
+        string $tableClass,
     ): string
     {
-        $identifier = $this->getDatabaseIdentifier($tableInterface);
+        $identifier = $this->getDatabaseIdentifier($tableClass);
         if (!array_key_exists($identifier, $this->databaseConnectionStrings)){
             throw ExceptionFactory::DatabaseConnectionStringMissing->create($identifier);
         }
@@ -79,34 +78,33 @@ class ConnectionFactory
     }
 
     /**
-     * @param SqlTableInterface $tableInterface
+     * @param string $tableClass
      * @return string
      * @throws MinimalismException
      */
     private function getDatabaseIdentifier(
-        SqlTableInterface $tableInterface,
+        string $tableClass,
     ): string
     {
-        $className = get_class($tableInterface);
-        $fullNameParts = explode('\\', $className);
+        $fullNameParts = explode('\\', $tableClass);
 
         if (isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
             return $fullNameParts[count($fullNameParts)-3];
         }
 
-        throw ExceptionFactory::MisplacedTableInterfaceClass->create($className);
+        throw ExceptionFactory::MisplacedTableInterfaceClass->create($tableClass);
     }
 
     /**
-     * @param SqlTableInterface $tableInterface
+     * @param string $tableClass
      * @return mysqli
      * @throws MinimalismException
      */
     public function create(
-        SqlTableInterface $tableInterface,
+        string $tableClass,
     ): mysqli
     {
-        $databaseName = $this->getDatabaseIdentifier($tableInterface);
+        $databaseName = $this->getDatabaseIdentifier($tableClass);
 
         if (array_key_exists($databaseName, $this->databases)){
             return $this->databases[$databaseName];
