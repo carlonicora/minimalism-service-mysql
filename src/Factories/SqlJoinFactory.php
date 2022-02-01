@@ -18,7 +18,7 @@ class SqlJoinFactory implements SqlJoinFactoryInterface
         private SqlTableInterface $joinedTable,
         private SqlFieldInterface $primaryKey,
         private SqlFieldInterface $foreignKey,
-        private ?SqlJoinType $joinType,
+        private ?SqlJoinType $joinType=null,
     )
     {
     }

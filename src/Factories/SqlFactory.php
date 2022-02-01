@@ -43,37 +43,39 @@ class SqlFactory implements SqlFactoryInterface
     private array $orderBy=[];
 
     /**
-     * @return SqlTableInterface
+     * @return SqlFactoryInterface
      */
-    public function getTable(
-    ): SqlTableInterface
+    public static function create(
+    ): SqlFactoryInterface
     {
-        return $this->table;
+        return new self();
     }
 
     /**
      * @param SqlTableInterface $table
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function selectAll(
         SqlTableInterface $table,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
         $this->from = 'FROM ' . $table->getTableName();
+
+        return $this;
     }
 
     /**
      * @param SqlTableInterface $table
      * @param SqlFieldInterface[] $fields
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function selectFields(
         SqlTableInterface $table,
         array $fields,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Read;
@@ -86,81 +88,162 @@ class SqlFactory implements SqlFactoryInterface
         $this->operandAndFields = substr($this->operandAndFields, 0, -1);
 
         $this->from = 'FROM ' . $table->getTableName();
+
+        return $this;
     }
 
     /**
      * @param SqlTableInterface $table
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function delete(
         SqlTableInterface $table,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
         $this->from = 'FROM ' . $table->getTableName();
+
+        return $this;
     }
 
     /**
      * @param SqlTableInterface $table
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function update(
         SqlTableInterface $table,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
         $this->from = $table->getTableName();
+
+        return $this;
     }
 
     /**
      * @param SqlTableInterface $table
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function insert(
         SqlTableInterface $table,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->table = $table;
         $this->databaseOperationType = DatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT INTO';
         $this->from = $table->getTableName();
+
+        return $this;
     }
 
     /**
      * @param SqlJoinFactoryInterface $join
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function addJoin(
         SqlJoinFactoryInterface $join
-    ): void
+    ): SqlFactoryInterface
     {
         $this->join[] = $join;
+
+        return $this;
     }
 
     /**
      * @param SqlFieldInterface[] $fields
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function addGroupByFields(
         array $fields,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->groupBy = $fields;
+
+        return $this;
     }
 
     /**
      * @param array{SqlFieldInterface,bool} $fields
-     * @return void
+     * @return SqlFactoryInterface
      */
     public function addOrderByFields(
         array $fields,
-    ): void
+    ): SqlFactoryInterface
     {
         $this->orderBy = $fields;
+
+        return $this;
+    }
+
+    /**
+     * @param SqlTableInterface $table
+     * @param string $sql
+     * @return SqlFactoryInterface
+     */
+    public function setSql(
+        SqlTableInterface $table,
+        string $sql,
+    ): SqlFactoryInterface
+    {
+        $this->table = $table;
+        $this->sql = $sql;
+
+        return $this;
+    }
+
+    /**
+     * @param SqlFieldInterface $field
+     * @param mixed $value
+     * @return SqlFactoryInterface
+     */
+    public function addParameter(
+        SqlFieldInterface $field,
+        mixed $value,
+    ): SqlFactoryInterface
+    {
+        if ($this->parameters === []){
+            $this->parameters[] = '';
+        }
+
+        $this->where[] = $field;
+        $this->parameters[0] .= $field->getFieldType();
+        $this->parameters[] = $value;
+
+        return $this;
+    }
+
+    /**
+     * @param SqlFieldInterface $field
+     * @param mixed $value
+     * @return SqlFactoryInterface
+     */
+    public function addHavingParameter(
+        SqlFieldInterface $field,
+        mixed $value,
+    ): SqlFactoryInterface
+    {
+        if ($this->parameters === []){
+            $this->parameters[] = '';
+        }
+
+        $this->having[] = $field;
+        $this->parameters[0] .= $field->getFieldType();
+        $this->parameters[] = $value;
+
+        return $this;
+    }
+
+    /**
+     * @return SqlTableInterface
+     */
+    public function getTable(
+    ): SqlTableInterface
+    {
+        return $this->table;
     }
 
     /**
@@ -245,62 +328,11 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @param SqlTableInterface $table
-     * @param string $sql
-     */
-    public function setSql(
-        SqlTableInterface $table,
-        string $sql,
-    ): void
-    {
-        $this->table = $table;
-        $this->sql = $sql;
-    }
-
-    /**
      * @return array
      */
     public function getParameters(
     ): array
     {
         return $this->parameters;
-    }
-
-    /**
-     * @param SqlFieldInterface $field
-     * @param mixed $value
-     * @return void
-     */
-    public function addParameter(
-        SqlFieldInterface $field,
-        mixed $value,
-    ): void
-    {
-        if ($this->parameters === []){
-            $this->parameters[] = '';
-        }
-
-        $this->where[] = $field;
-        $this->parameters[0] .= $field->getFieldType();
-        $this->parameters[] = $value;
-    }
-
-    /**
-     * @param SqlFieldInterface $field
-     * @param mixed $value
-     * @return void
-     */
-    public function addHavingParameter(
-        SqlFieldInterface $field,
-        mixed $value,
-    ): void
-    {
-        if ($this->parameters === []){
-            $this->parameters[] = '';
-        }
-
-        $this->having[] = $field;
-        $this->parameters[0] .= $field->getFieldType();
-        $this->parameters[] = $value;
     }
 }

@@ -17,9 +17,11 @@ class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
 
         $data = $object->export();
 
+        /** @noinspection UnusedFunctionResultInspection */
         $this->factory->delete($this->table);
 
         foreach ($this->primaryKeys as $field){
+            /** @noinspection UnusedFunctionResultInspection */
             $this->factory->addParameter($field, $data[$field->value]);
         }
     }

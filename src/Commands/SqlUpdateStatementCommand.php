@@ -17,13 +17,16 @@ class SqlUpdateStatementCommand extends AbstractSqlStatementCommand
 
         $data = $object->export();
 
+        /** @noinspection UnusedFunctionResultInspection */
         $this->factory->update($this->table);
 
         foreach ($this->regularFields as $field){
+            /** @noinspection UnusedFunctionResultInspection */
             $this->factory->addParameter($field, $data[$field->value]);
         }
 
         foreach ($this->primaryKeys as $field){
+            /** @noinspection UnusedFunctionResultInspection */
             $this->factory->addParameter($field, $data[$field->value]);
         }
     }
