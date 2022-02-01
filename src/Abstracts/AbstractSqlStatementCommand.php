@@ -32,8 +32,8 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
     )
     {
         $this->table = $object->getTable();
-        
-        $this->factory = new SqlFactory();
+
+        $this->factory = SqlFactory::create($this->table);
 
         /** @noinspection PhpUndefinedMethodInspection */
         $this->autoIncrementField = $this->table->getAutoIncrementField();

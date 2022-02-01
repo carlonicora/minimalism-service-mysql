@@ -13,6 +13,7 @@ use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
 use CarloNicora\Minimalism\Objects\ModelParameters;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
+use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
 use Exception;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 
@@ -37,6 +38,15 @@ class MySQL extends AbstractService implements SqlInterface
         if (!$this->cache->useCaching()){
             $this->cache = null;
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function initialise(
+    ): void
+    {
+        SqlFactory::initialise($this->connectionFactory->getConfigurations());
     }
 
     /**

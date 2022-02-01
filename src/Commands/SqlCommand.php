@@ -112,9 +112,9 @@ class SqlCommand
         } elseif ($databaseOperationType === DatabaseOperationType::Create) {
             $response = $factory->export();
 
-            if (($factory->getTable())->getAutoIncrementField() !== null){
+            if ($factory->getTable()->getAutoIncrementField() !== null){
                 /** @noinspection PhpUndefinedFieldInspection */
-                $response[($factory->getTable())->getAutoIncrementField()->value] = $this->getInsertedId();
+                $response[$factory->getTable()->getAutoIncrementField()->name] = $this->getInsertedId();
             }
 
             $this->setOriginalValues($response);

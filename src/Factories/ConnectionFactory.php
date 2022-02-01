@@ -52,11 +52,38 @@ class ConnectionFactory
     }
 
     /**
+     * @return array
+     */
+    public function getConfigurations(
+    ): array
+    {
+        return $this->databaseConnectionStrings;
+    }
+
+    /**
      * @param SqlTableInterface $tableInterface
      * @return string
      * @throws MinimalismException
      */
-    private function getDatabaseName(
+    public function getDatabaseName(
+        SqlTableInterface $tableInterface,
+    ): string
+    {
+        $identifier = $this->getDatabaseIdentifier($tableInterface);
+        if (!array_key_exists($identifier, $this->databaseConnectionStrings)){
+            throw ExceptionFactory::DatabaseConnectionStringMissing->create($identifier);
+        }
+        $dbConf = $this->databaseConnectionStrings[$identifier];
+
+        return $dbConf['dbName'];
+    }
+
+    /**
+     * @param SqlTableInterface $tableInterface
+     * @return string
+     * @throws MinimalismException
+     */
+    private function getDatabaseIdentifier(
         SqlTableInterface $tableInterface,
     ): string
     {
@@ -79,7 +106,7 @@ class ConnectionFactory
         SqlTableInterface $tableInterface,
     ): mysqli
     {
-        $databaseName = $this->getDatabaseName($tableInterface);
+        $databaseName = $this->getDatabaseIdentifier($tableInterface);
 
         if (array_key_exists($databaseName, $this->databases)){
             return $this->databases[$databaseName];

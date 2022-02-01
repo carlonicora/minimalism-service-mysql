@@ -1,8 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Traits;
 
-use CarloNicora\Minimalism\Services\MySQL\Enums\FieldOption;
-use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldTypeInterface;
 
 trait SqlFieldTrait
 {
@@ -13,7 +12,7 @@ trait SqlFieldTrait
     ): bool
     {
         /** @noinspection PhpUndefinedMethodInspection */
-        return (($this->getFieldDefinition() & FieldOption::AutoIncrement->value) > 0);
+        return (($this->getFieldDefinition() & FieldTypeInterface::AutoIncrement) > 0);
     }
 
     /**
@@ -23,7 +22,7 @@ trait SqlFieldTrait
     ): string {
         /** @noinspection PhpUndefinedMethodInspection */
         /** @noinspection PhpUndefinedFieldInspection */
-        return $this->getTableName() . '.' . $this->value;
+        return $this->getTableName() . '.' . $this->name;
     }
 
     /**
@@ -37,11 +36,11 @@ trait SqlFieldTrait
         /** @noinspection PhpUndefinedMethodInspection */
         $fieldDefinition = $this->getFieldDefinition();
 
-        if (($fieldDefinition & FieldType::Integer->value) > 0){
+        if (($fieldDefinition & FieldTypeInterface::Integer) > 0){
             $response = 'i';
-        } elseif (($fieldDefinition & FieldType::Double->value) > 0){
+        } elseif (($fieldDefinition & FieldTypeInterface::Double) > 0){
             $response = 'd';
-        } elseif (($fieldDefinition & FieldType::Blob->value) > 0){
+        } elseif (($fieldDefinition & FieldTypeInterface::Blob) > 0){
             $response = 'b';
         }
 

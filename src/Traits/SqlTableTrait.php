@@ -2,18 +2,20 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Traits;
 
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
-use CarloNicora\Minimalism\Services\MySQL\Enums\FieldOption;
+use CarloNicora\Minimalism\Services\MySQL\Interfaces\FieldTypeInterface;
 
 trait SqlTableTrait
 {
     /**
      * @return string
      */
-    public function getTableName(
+    public function getName(
     ): string
     {
         /** @noinspection PhpUndefinedClassConstantInspection */
-        return self::tableName->value;
+        /** @noinspection PhpAccessingStaticMembersOnTraitInspection */
+        /** @noinspection PhpUndefinedFieldInspection */
+        return self::$tableName;
     }
 
     /**
@@ -26,7 +28,7 @@ trait SqlTableTrait
         /** @noinspection PhpUndefinedMethodInspection */
         foreach (self::cases() as $case){
             /** @noinspection PhpUndefinedClassConstantInspection */
-            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldOption::AutoIncrement->value) > 0) {
+            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldTypeInterface::AutoIncrement) > 0) {
                 return $case;
             }
         }
@@ -46,7 +48,7 @@ trait SqlTableTrait
         /** @noinspection PhpUndefinedMethodInspection */
         foreach (self::cases() as $case){
             /** @noinspection PhpUndefinedClassConstantInspection */
-            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldOption::PrimaryKey->value) > 0) {
+            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldTypeInterface::PrimaryKey) > 0) {
                 $response[] = $case;
             }
         }
@@ -66,7 +68,7 @@ trait SqlTableTrait
         /** @noinspection PhpUndefinedMethodInspection */
         foreach (self::cases() as $case){
             /** @noinspection PhpUndefinedClassConstantInspection */
-            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldOption::PrimaryKey->value) === 0) {
+            if (($case !== self::tableName) && ($case->getFieldDefinition() & FieldTypeInterface::PrimaryKey) === 0) {
                 $response[] = $case;
             }
         }

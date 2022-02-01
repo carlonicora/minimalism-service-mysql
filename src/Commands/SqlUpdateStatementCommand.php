@@ -18,18 +18,18 @@ class SqlUpdateStatementCommand extends AbstractSqlStatementCommand
         $data = $object->export();
 
         /** @noinspection UnusedFunctionResultInspection */
-        $this->factory->update($this->table);
+        $this->factory->update();
 
         foreach ($this->regularFields as $field){
             /** @noinspection UnusedFunctionResultInspection */
             /** @noinspection PhpUndefinedFieldInspection */
-            $this->factory->addParameter($field, $data[$field->value]);
+            $this->factory->addParameter($field, $data[$field->name]);
         }
 
         foreach ($this->primaryKeys as $field){
             /** @noinspection UnusedFunctionResultInspection */
             /** @noinspection PhpUndefinedFieldInspection */
-            $this->factory->addParameter($field, $data[$field->value]);
+            $this->factory->addParameter($field, $data[$field->name]);
         }
     }
 }
