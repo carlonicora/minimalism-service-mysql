@@ -61,14 +61,16 @@ class MySQL extends AbstractService implements SqlInterface
      * @template InstanceOfType
      * @param SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @param class-string<InstanceOfType>|null $returnedObjectInterfaceName
+     * @param class-string<InstanceOfType>|null $singleReturnedObjectInterfaceName
+     * @param class-string<InstanceOfType>|null $arrayReturnedObjectInterfaceName
      * @return InstanceOfType|array
      * @throws MinimalismException|Exception
      */
     public function create(
         SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
-        ?string $returnedObjectInterfaceName=null,
+        ?string $singleReturnedObjectInterfaceName=null,
+        ?string $arrayReturnedObjectInterfaceName=null,
     ): SqlDataObjectInterface|array
     {
         $response = $this->execute(
@@ -77,18 +79,16 @@ class MySQL extends AbstractService implements SqlInterface
             cacheBuilder: $cacheBuilder,
         );
 
-        if ($returnedObjectInterfaceName !== null){
-            if (array_is_list($response)){
-                $response = $this->returnObjectArray(
-                    recordset: $response,
-                    objectType: $returnedObjectInterfaceName,
-                );
-            } else {
-                $response = $this->returnSingleObject(
-                    recordset: $response,
-                    objectType: $returnedObjectInterfaceName,
-                );
-            }
+        if ($singleReturnedObjectInterfaceName !== null) {
+            $response = $this->returnSingleObject(
+                recordset: $response,
+                objectType: $singleReturnedObjectInterfaceName,
+            );
+        } elseif ($arrayReturnedObjectInterfaceName !== null) {
+            $response = $this->returnObjectArray(
+                recordset: $response,
+                objectType: $arrayReturnedObjectInterfaceName,
+            );
         }
 
         return $response;
