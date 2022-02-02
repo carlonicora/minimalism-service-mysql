@@ -26,7 +26,7 @@ class SqlTable implements SqlTableInterface
      */
     public function __construct(
         private string $name,
-        string $databaseIdentifier,
+        private string $databaseIdentifier,
     )
     {
         $this->databaseName = SqlTableFactory::getDatabaseName($databaseIdentifier);
@@ -63,6 +63,15 @@ class SqlTable implements SqlTableInterface
                 message: 'Failed to create table from attributes (' . $tableClass . ')',
             );
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getDatabaseIdentifier(
+    ): string
+    {
+        return $this->databaseIdentifier;
     }
 
     /**

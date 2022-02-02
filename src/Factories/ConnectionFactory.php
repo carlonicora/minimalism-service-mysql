@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Services\MySQL\Data\SqlTable;
 use Exception;
 use mysqli;
 use Throwable;
@@ -64,24 +65,6 @@ class ConnectionFactory
      * @return string
      * @throws MinimalismException
      */
-    public function getDatabaseName(
-        string $tableClass,
-    ): string
-    {
-        $identifier = $this->getDatabaseIdentifier($tableClass);
-        if (!array_key_exists($identifier, $this->databaseConnectionStrings)){
-            throw ExceptionFactory::DatabaseConnectionStringMissing->create($identifier);
-        }
-        $dbConf = $this->databaseConnectionStrings[$identifier];
-
-        return $dbConf['dbName'];
-    }
-
-    /**
-     * @param string $tableClass
-     * @return string
-     * @throws MinimalismException
-     */
     private function getDatabaseIdentifier(
         string $tableClass,
     ): string
@@ -96,25 +79,19 @@ class ConnectionFactory
     }
 
     /**
-     * @param string $tableClass
+     * @param SqlTable $table
      * @return mysqli
      * @throws MinimalismException
      */
     public function create(
-        string $tableClass,
+        SqlTable $table,
     ): mysqli
     {
-        $databaseName = $this->getDatabaseIdentifier($tableClass);
-
-        if (array_key_exists($databaseName, $this->databases)){
-            return $this->databases[$databaseName];
+        if (!array_key_exists($table->getDatabaseIdentifier(), $this->databaseConnectionStrings)){
+            throw ExceptionFactory::DatabaseConnectionStringMissing->create($table->getDatabaseIdentifier());
         }
 
-        if (!array_key_exists($databaseName, $this->databaseConnectionStrings)){
-            throw ExceptionFactory::DatabaseConnectionStringMissing->create($databaseName);
-        }
-
-        $dbConf = $this->databaseConnectionStrings[$databaseName];
+        $dbConf = $this->databaseConnectionStrings[$table->getDatabaseIdentifier()];
 
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
@@ -123,10 +100,9 @@ class ConnectionFactory
         }
 
         $response->set_charset('utf8mb4');
-        $this->databases[$databaseName] = $response;
+        $this->databases[$table->getDatabaseIdentifier()] = $response;
 
         return $response;
-
     }
 
     /**
