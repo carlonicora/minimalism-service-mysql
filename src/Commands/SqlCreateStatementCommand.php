@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractSqlStatementCommand;
 
@@ -17,7 +18,7 @@ class SqlCreateStatementCommand extends AbstractSqlStatementCommand
     {
         parent::__construct($object);
 
-        $data = $object->export();
+        $data = SqlDataObjectFactory::createData(object: $object);
 
         /** @noinspection UnusedFunctionResultInspection */
         $this->factory->insert();
