@@ -1,8 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 
+use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SqlStatementCommandInterface;
 
@@ -11,41 +12,23 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
     /** @var SqlFactory  */
     protected SqlFactory $factory;
 
-    /** @var string  */
-    protected string $tableClass;
-
-    /** @var SqlFieldInterface|null  */
-    protected ?SqlFieldInterface $autoIncrementField;
-
-    /** @var SqlFieldInterface[]  */
-    protected array $primaryKeys;
-
-    /** @var SqlFieldInterface[]  */
-    protected array $regularFields;
+    /** @var SqlTableInterface  */
+    protected SqlTableInterface $table;
 
     /**
      * @param SqlDataObjectInterface $object
+     * @throws MinimalismException
      */
     public function __construct(
         SqlDataObjectInterface $object,
     )
     {
-        $this->tableClass = $object->getTableClass();
-
-        $this->factory = SqlFactory::create($this->tableClass);
-
-        /** @noinspection PhpUndefinedMethodInspection */
-        $this->autoIncrementField = $this->tableClass::getAutoIncrementField();
-
-        /** @noinspection PhpUndefinedMethodInspection */
-        $this->primaryKeys = $this->tableClass::getPrimaryKeyFields();
-
-        /** @noinspection PhpUndefinedMethodInspection */
-        $this->regularFields = $this->tableClass::getRegularFields();
+        $this->factory = SqlFactory::create($object->getTableClass());
     }
 
     /**
      * @return string
+     * @throws MinimalismException
      */
     final public function getSql(
     ): string

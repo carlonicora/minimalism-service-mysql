@@ -1,21 +1,21 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
+use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
+use UnitEnum;
 
 class SqlFactory implements SqlFactoryInterface
 {
     /** @var DatabaseOperationType  */
     private DatabaseOperationType $databaseOperationType;
 
-    /** @var array  */
-    private static array $dbNames=[];
-
-    /** @var string  */
-    private string $databasePrefix;
+    /** @var SqlTableInterface  */
+    private SqlTableInterface $table;
 
     /** @var string|null  */
     private ?string $sql=null;
@@ -46,32 +46,19 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param string $tableClass
+     * @throws MinimalismException
      */
     public function __construct(
         private string $tableClass,
     )
     {
-        $this->databasePrefix = TableNameFactory::getDatabaseName($this->tableClass, self::$dbNames);
-    }
-
-    /**
-     * @param array $connectionStrings
-     * @return void
-     */
-    public static function initialise(
-        array $connectionStrings,
-    ): void
-    {
-        self::$dbNames = [];
-
-        foreach ($connectionStrings as $dbIdentifier => $dbConnectionString){
-            self::$dbNames[$dbIdentifier] = $dbConnectionString['dbName'];
-        }
+        $this->table = SqlTableFactory::create($this->tableClass);
     }
 
     /**
      * @param string $tableClass
      * @return SqlFactoryInterface
+     * @throws MinimalismException
      */
     public static function create(
         string $tableClass,
@@ -88,7 +75,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
-        $this->from = 'FROM ' . $this->databasePrefix . $this->tableClass::tableName;
+        $this->from = 'FROM ' . $this->table->getFullName();
 
         return $this;
     }
@@ -105,12 +92,12 @@ class SqlFactory implements SqlFactoryInterface
         $this->operandAndFields = 'SELECT ';
 
         foreach ($fields as $field){
-            $this->operandAndFields .= $field->getFieldName();
+            $this->operandAndFields .= $field->getFullName();
         }
 
         $this->operandAndFields = substr($this->operandAndFields, 0, -1);
 
-        $this->from = 'FROM ' . $this->databasePrefix . $this->tableClass::tableName;
+        $this->from = 'FROM ' . $this->table->getFullName();
 
         return $this;
     }
@@ -123,7 +110,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
-        $this->from = 'FROM ' . $this->databasePrefix . $this->tableClass::tableName;
+        $this->from = 'FROM ' . $this->table->getFullName();
 
         return $this;
     }
@@ -136,7 +123,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
-        $this->from = $this->databasePrefix . $this->tableClass::tableName;
+        $this->from = $this->table->getFullName();
 
         return $this;
     }
@@ -149,7 +136,7 @@ class SqlFactory implements SqlFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT INTO';
-        $this->from = $this->databasePrefix . $this->tableClass::tableName;
+        $this->from = $this->table->getFullName();
 
         return $this;
     }
@@ -168,7 +155,7 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @param SqlFieldInterface[] $fields
+     * @param UnitEnum[] $fields
      * @return SqlFactoryInterface
      */
     public function addGroupByFields(
@@ -181,7 +168,7 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @param array{SqlFieldInterface,bool} $fields
+     * @param array{UnitEnum,bool} $fields
      * @return SqlFactoryInterface
      */
     public function addOrderByFields(
@@ -207,58 +194,63 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @param SqlFieldInterface $field
+     * @param UnitEnum $field
      * @param mixed $value
      * @return SqlFactoryInterface
      */
     public function addParameter(
-        SqlFieldInterface $field,
+        UnitEnum $field,
         mixed $value,
     ): SqlFactoryInterface
     {
+        $sqlField = $this->table->getFieldByName($field->name);
+
         if ($this->parameters === []){
             $this->parameters[] = '';
         }
 
-        $this->where[] = $field;
-        $this->parameters[0] .= $field->getFieldType();
+        $this->where[] = $sqlField->getFullName();
+        $this->parameters[0] .= $sqlField->getType();
         $this->parameters[] = $value;
 
         return $this;
     }
 
     /**
-     * @param SqlFieldInterface $field
+     * @param UnitEnum $field
      * @param mixed $value
      * @return SqlFactoryInterface
      */
     public function addHavingParameter(
-        SqlFieldInterface $field,
+        UnitEnum $field,
         mixed $value,
     ): SqlFactoryInterface
     {
+        $sqlField = $this->table->getFieldByName($field->name);
+
         if ($this->parameters === []){
             $this->parameters[] = '';
         }
 
-        $this->having[] = $field;
-        $this->parameters[0] .= $field->getFieldType();
+        $this->having[] = $sqlField->getFullName();
+        $this->parameters[0] .= $sqlField->getType();
         $this->parameters[] = $value;
 
         return $this;
     }
 
     /**
-     * @return string
+     * @return SqlTableInterface
      */
-    public function getTableClass(
-    ): string
+    public function getTable(
+    ): SqlTableInterface
     {
-        return $this->tableClass;
+        return $this->table;
     }
 
     /**
      * @return string
+     * @throws MinimalismException
      */
     public function getSql(
     ): string
@@ -271,7 +263,6 @@ class SqlFactory implements SqlFactoryInterface
 
         if ($this->databaseOperationType === DatabaseOperationType::Read) {
             foreach ($this->join as $join) {
-                $join->setDbNames(self::$dbNames);
                 $response .= ' ' . $join->getSql();
             }
         }
@@ -281,7 +272,7 @@ class SqlFactory implements SqlFactoryInterface
             $response .= ' (';
 
             foreach ($this->where as $field){
-                $response .= $this->databasePrefix . $field->getFieldName() . ',';
+                $response .= $field->getFullName() . ',';
                 $additionalSql .= '?,';
             }
 
@@ -296,10 +287,10 @@ class SqlFactory implements SqlFactoryInterface
             $isFirstWhere = true;
             foreach ($this->where as $field) {
                 if ($field->isPrimaryKey()){
-                    $additionalSql .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $this->databasePrefix . $field->getFieldName() . '=?';
+                    $additionalSql .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field->getFullName() . '=?';
                     $isFirstWhere = false;
                 } else {
-                    $response .= $field->getFieldName() . '=?,';
+                    $response .= $field->getFullName() . '=?,';
                 }
             }
 
@@ -309,26 +300,26 @@ class SqlFactory implements SqlFactoryInterface
         } else {
             $isFirstWhere = true;
             foreach ($this->where as $field) {
-                $response .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $this->databasePrefix . $field->getFieldName() . '=?';
+                $response .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field->getFullName() . '=?';
                 $isFirstWhere = false;
             }
 
             if ($this->databaseOperationType === DatabaseOperationType::Read) {
                 $isFirstGroupBy = true;
                 foreach ($this->groupBy as $field) {
-                    $response .= ' ' . ($isFirstGroupBy ? 'GROUP BY ' : ',') . $this->databasePrefix . $field->getFieldName();
+                    $response .= ' ' . ($isFirstGroupBy ? 'GROUP BY ' : ',') . $field->getFullName();
                     $isFirstGroupBy = false;
                 }
 
                 $isFirstHaving = true;
                 foreach ($this->having as $field) {
-                    $response .= ' ' . ($isFirstHaving ? 'HAVING' : 'AND') . ' ' . $this->databasePrefix . $field->getFieldName() . '=?';
+                    $response .= ' ' . ($isFirstHaving ? 'HAVING' : 'AND') . ' ' . $field->getFullName() . '=?';
                     $isFirstHaving = false;
                 }
 
                 $isFirstOrderBy = true;
                 foreach ($this->orderBy as $field) {
-                    $response .= ' ' . ($isFirstOrderBy ? 'ORDER BY ' : ',') . $this->databasePrefix . $field[0]->getFieldName() . ($field[1] ? ' DESC' : '');
+                    $response .= ' ' . ($isFirstOrderBy ? 'ORDER BY ' : ',') . $field[0]->getFullName() . ($field[1] ? ' DESC' : '');
                     $isFirstOrderBy = false;
                 }
             }

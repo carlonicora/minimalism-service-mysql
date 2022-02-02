@@ -13,7 +13,7 @@ use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
 use CarloNicora\Minimalism\Objects\ModelParameters;
 use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
-use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\SqlTableFactory;
 use Exception;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use Throwable;
@@ -47,7 +47,7 @@ class MySQL extends AbstractService implements SqlInterface
     public function initialise(
     ): void
     {
-        SqlFactory::initialise($this->connectionFactory->getConfigurations());
+        SqlTableFactory::initialise($this->connectionFactory->getConfigurations());
     }
 
     /**
@@ -75,7 +75,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @param class-string<InstanceOfType>|null $singleReturnedObjectInterfaceName
      * @param class-string<InstanceOfType>|null $arrayReturnedObjectInterfaceName
      * @return InstanceOfType|array
-     * @throws MinimalismException|Exception
+     * @throws MinimalismException|Exception|Throwable
      */
     public function create(
         SqlDataObjectInterface|array $factory,
@@ -160,7 +160,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @param SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return void
-     * @throws MinimalismException
+     * @throws MinimalismException|Throwable
      */
     public function update(
         SqlDataObjectInterface|array $factory,
@@ -179,7 +179,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @param SqlFactoryInterface|SqlDataObjectInterface $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return void
-     * @throws MinimalismException
+     * @throws MinimalismException|Throwable
      */
     public function delete(
         SqlFactoryInterface|SqlDataObjectInterface $factory,

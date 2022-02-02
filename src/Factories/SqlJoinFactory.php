@@ -1,23 +1,21 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
+use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlJoinType;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
+use UnitEnum;
 
 class SqlJoinFactory implements SqlJoinFactoryInterface
 {
-    /** @var array  */
-    private array $dbNames=[];
-
     /**
-     * @param SqlFieldInterface $primaryKey
-     * @param SqlFieldInterface $foreignKey
+     * @param UnitEnum $primaryKey
+     * @param UnitEnum $foreignKey
      * @param SqlJoinType|null $joinType
      */
     public function __construct(
-        private SqlFieldInterface $primaryKey,
-        private SqlFieldInterface $foreignKey,
+        private UnitEnum $primaryKey,
+        private UnitEnum $foreignKey,
         private ?SqlJoinType $joinType=null,
     )
     {
@@ -25,25 +23,18 @@ class SqlJoinFactory implements SqlJoinFactoryInterface
 
     /**
      * @return string
+     * @throws MinimalismException
      */
     public function getSql(
     ): string
     {
-        $primaryKeyDatabaseName = TableNameFactory::getDatabaseName(get_class($this->primaryKey), $this->dbNames);
-        $foreignKeyDatabaseName = TableNameFactory::getDatabaseName(get_class($this->foreignKey), $this->dbNames);
-        /** @noinspection PhpUndefinedClassConstantInspection */
-        return ($this->joinType !== null ? $this->joinType->value . ' JOIN' : 'JOIN')
-            . ' ' . $foreignKeyDatabaseName . $this->foreignKey::tableName
-            . ' ON ' . $primaryKeyDatabaseName . $this->primaryKey->getFieldName() . '=' . $foreignKeyDatabaseName . $this->foreignKey->getFieldName();
-    }
+        $primaryTable = SqlTableFactory::create(get_class($this->primaryKey));
+        $foreignTable = SqlTableFactory::create(get_class($this->foreignKey));
 
-    /**
-     * @param array $dbNames
-     */
-    public function setDbNames(
-        array $dbNames,
-    ): void
-    {
-        $this->dbNames = $dbNames;
+
+        return ($this->joinType !== null ? $this->joinType->value . ' JOIN' : 'JOIN')
+            . ' ' . $foreignTable->getFullName()
+            . ' ON ' . $primaryTable->getFieldByName($this->primaryKey->name)->getFullName()
+            . '=' . $foreignTable->getFieldByName($this->foreignKey->name)->getFullName();
     }
 }

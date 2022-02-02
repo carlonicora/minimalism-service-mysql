@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
+use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractSqlStatementCommand;
 
@@ -8,6 +9,7 @@ class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
 {
     /**
      * @param SqlDataObjectInterface $object
+     * @throws MinimalismException
      */
     public function __construct(
         SqlDataObjectInterface $object,
@@ -20,10 +22,9 @@ class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
         /** @noinspection UnusedFunctionResultInspection */
         $this->factory->delete();
 
-        foreach ($this->primaryKeys as $field){
+        foreach ($this->factory->getTable()->getPrimaryKeyFields() as $field){
             /** @noinspection UnusedFunctionResultInspection */
-            /** @noinspection PhpUndefinedFieldInspection */
-            $this->factory->addParameter($field, $data[$field->name]);
+            $this->factory->addParameter($field->getIdentifier(), $data[$field->getName()]);
         }
     }
 }
