@@ -281,11 +281,13 @@ class MySQL extends AbstractService implements SqlInterface
 
         if (array_is_list($recordset)){
             $response = SqlDataObjectFactory::createObject(
+                objectFactory: $this->objectFactory,
                 objectClass: $objectType,
                 data: $recordset[0],
             );
         } else {
             $response = SqlDataObjectFactory::createObject(
+                objectFactory: $this->objectFactory,
                 objectClass: $objectType,
                 data: $recordset,
             );
@@ -311,12 +313,14 @@ class MySQL extends AbstractService implements SqlInterface
         if (array_is_list($recordset)) {
             foreach ($recordset ?? [] as $record) {
                 $response[] = SqlDataObjectFactory::createObject(
+                    objectFactory: $this->objectFactory,
                     objectClass: $objectType,
                     data: $record,
                 );
             }
         } else {
             $response[] = SqlDataObjectFactory::createObject(
+                objectFactory: $this->objectFactory,
                 objectClass: $objectType,
                 data: $recordset[0],
             );
