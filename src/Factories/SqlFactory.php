@@ -209,7 +209,7 @@ class SqlFactory implements SqlFactoryInterface
             $this->parameters[] = '';
         }
 
-        $this->where[] = $sqlField->getFullName();
+        $this->where[] = $sqlField;
         $this->parameters[0] .= $sqlField->getType();
         $this->parameters[] = $value;
 
@@ -232,7 +232,7 @@ class SqlFactory implements SqlFactoryInterface
             $this->parameters[] = '';
         }
 
-        $this->having[] = $sqlField->getFullName();
+        $this->having[] = $sqlField;
         $this->parameters[0] .= $sqlField->getType();
         $this->parameters[] = $value;
 
@@ -246,6 +246,15 @@ class SqlFactory implements SqlFactoryInterface
     ): SqlTableInterface
     {
         return $this->table;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTableClass(
+    ): string
+    {
+        return $this->tableClass;
     }
 
     /**

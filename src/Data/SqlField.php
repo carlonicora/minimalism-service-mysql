@@ -2,7 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Data;
 
 use Attribute;
-use BackedEnum;
+use UnitEnum;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\FieldOption;
 use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
@@ -11,8 +11,8 @@ use IntBackedEnum;
 #[Attribute]
 class SqlField implements SqlFieldInterface
 {
-    /** @var BackedEnum  */
-    private BackedEnum $identifier;
+    /** @var UnitEnum  */
+    private UnitEnum $identifier;
 
     /**
      * @param IntBackedEnum|FieldType $fieldType
@@ -22,7 +22,7 @@ class SqlField implements SqlFieldInterface
      * @param string $databaseName
      */
     public function __construct(
-        private IntBackedEnum|FieldType $fieldType=FieldType::String,
+        private IntBackedEnum|FieldType $fieldType,
         private IntBackedEnum|FieldOption|null $fieldOption=null,
         private string $name='',
         private string $tableName='',
@@ -32,20 +32,20 @@ class SqlField implements SqlFieldInterface
     }
 
     /**
-     * @return BackedEnum
+     * @return UnitEnum
      */
     public function getIdentifier(
-    ): BackedEnum
+    ): UnitEnum
     {
         return $this->identifier;
     }
 
     /**
-     * @param BackedEnum $identifier
+     * @param UnitEnum $identifier
      * @return void
      */
     public function setIdentifier(
-        BackedEnum $identifier,
+        UnitEnum $identifier,
     ): void
     {
         $this->identifier = $identifier;

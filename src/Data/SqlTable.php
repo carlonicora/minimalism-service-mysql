@@ -6,6 +6,7 @@ use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
+use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlTableFactory;
 use ReflectionEnum;
 use ReflectionException;
@@ -45,15 +46,16 @@ class SqlTable implements SqlTableInterface
                 $arguments = $case->getAttributes(SqlField::class)[0]->getArguments();
 
                 $field = new SqlField(
-                    fieldType: $arguments['fieldType'],
-                    fieldOption: $arguments['fieldType'] ?? null,
+                    fieldType: $arguments['fieldType'] ?? FieldType::String,
+                    fieldOption: $arguments['fieldOption'] ?? null,
                     name: $case->getName(),
                     tableName: $this->name,
                     databaseName: $this->databaseName,
                 );
+
                 $field->setIdentifier($case->getValue());
 
-                $this->fields[] = $field;
+                $this->fields[$case->getName()] = $field;
             }
         } catch (ReflectionException) {
             throw new MinimalismException(
@@ -62,7 +64,7 @@ class SqlTable implements SqlTableInterface
             );
         }
     }
-    
+
     /**
      * @return string
      */
