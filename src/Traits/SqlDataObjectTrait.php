@@ -1,14 +1,13 @@
 <?php
-namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
+namespace CarloNicora\Minimalism\Services\MySQL\Traits;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Attributes\DbTable;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlTableFactory;
 use ReflectionClass;
 
-abstract class AbstractSqlDataObject implements SqlDataObjectInterface
+trait SqlDataObjectTrait
 {
     /**
      * @return string

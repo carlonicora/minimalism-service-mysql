@@ -61,24 +61,6 @@ class ConnectionFactory
     }
 
     /**
-     * @param string $tableClass
-     * @return string
-     * @throws MinimalismException
-     */
-    private function getDatabaseIdentifier(
-        string $tableClass,
-    ): string
-    {
-        $fullNameParts = explode('\\', $tableClass);
-
-        if (isset($fullNameParts[count($fullNameParts)-1]) && strtolower($fullNameParts[count($fullNameParts)-2]) === 'tables'){
-            return $fullNameParts[count($fullNameParts)-3];
-        }
-
-        throw ExceptionFactory::MisplacedTableInterfaceClass->create($tableClass);
-    }
-
-    /**
      * @param SqlTable $table
      * @return mysqli
      * @throws MinimalismException
