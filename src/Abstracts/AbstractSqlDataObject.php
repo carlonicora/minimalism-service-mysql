@@ -16,7 +16,7 @@ abstract class AbstractSqlDataObject implements SqlDataObjectInterface
     final public function getTableClass(
     ): string
     {
-        $reflection = new ReflectionClass(self::class);
+        $reflection = new ReflectionClass(static::class);
         return $reflection->getAttributes(DbTable::class)[0]->getArguments()['tableClass'];
     }
 
