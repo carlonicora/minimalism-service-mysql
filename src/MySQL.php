@@ -180,13 +180,13 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
-     * @param SqlFactoryInterface|SqlDataObjectInterface $factory
+     * @param SqlDataObjectInterface|SqlFactoryInterface|array $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return void
      * @throws MinimalismException|Throwable
      */
     public function delete(
-        SqlFactoryInterface|SqlDataObjectInterface $factory,
+        SqlFactoryInterface|SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
     ): void
     {
