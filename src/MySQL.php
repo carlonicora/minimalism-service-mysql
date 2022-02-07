@@ -70,7 +70,7 @@ class MySQL extends AbstractService implements SqlInterface
 
     /**
      * @template InstanceOfType
-     * @param SqlDataObjectInterface|SqlDataObjectInterface[] $factory
+     * @param SqlFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param class-string<InstanceOfType>|null $sqlObjectInterfaceClass
      * @param bool $expectsSingleRecord
@@ -78,7 +78,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @throws MinimalismException|Exception|Throwable
      */
     public function create(
-        SqlDataObjectInterface|array $factory,
+        SqlFactoryInterface|SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $sqlObjectInterfaceClass=null,
         bool $expectsSingleRecord=true,

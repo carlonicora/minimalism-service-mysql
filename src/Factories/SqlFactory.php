@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
@@ -32,7 +33,7 @@ class SqlFactory implements SqlFactoryInterface
     /** @var SqlJoinFactory[] */
     private array $join=[];
 
-    /** @var SqlFieldInterface[]  */
+    /** @var array{SqlComparison,SqlFieldInterface}  */
     private array $where=[];
 
     /** @var SqlFieldInterface[] */
@@ -196,11 +197,13 @@ class SqlFactory implements SqlFactoryInterface
     /**
      * @param UnitEnum $field
      * @param mixed $value
+     * @param SqlComparison|null $comparison
      * @return SqlFactoryInterface
      */
     public function addParameter(
         UnitEnum $field,
         mixed $value,
+        ?SqlComparison $comparison=SqlComparison::Equal,
     ): SqlFactoryInterface
     {
         $sqlField = $this->table->getFieldByName($field->name);
@@ -209,7 +212,7 @@ class SqlFactory implements SqlFactoryInterface
             $this->parameters[] = '';
         }
 
-        $this->where[] = $sqlField;
+        $this->where[] = [$comparison, $sqlField];
         $this->parameters[0] .= $sqlField->getType();
         $this->parameters[] = $value;
 
@@ -281,7 +284,7 @@ class SqlFactory implements SqlFactoryInterface
             $response .= ' (';
 
             foreach ($this->where as $field){
-                $response .= $field->getFullName() . ',';
+                $response .= $field[1]->getFullName() . ',';
                 $additionalSql .= '?,';
             }
 
@@ -296,10 +299,10 @@ class SqlFactory implements SqlFactoryInterface
             $isFirstWhere = true;
             foreach ($this->where as $field) {
                 if ($field->isPrimaryKey()){
-                    $additionalSql .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field->getFullName() . '=?';
+                    $additionalSql .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field[1]->getFullName() . $field[0]->value . '?';
                     $isFirstWhere = false;
                 } else {
-                    $response .= $field->getFullName() . '=?,';
+                    $response .= $field[1]->getFullName() . $field[0]->value . '?,';
                 }
             }
 
@@ -309,7 +312,7 @@ class SqlFactory implements SqlFactoryInterface
         } else {
             $isFirstWhere = true;
             foreach ($this->where as $field) {
-                $response .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field->getFullName() . '=?';
+                $response .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field[1]->getFullName() . $field[0]->value . '?';
                 $isFirstWhere = false;
             }
 
