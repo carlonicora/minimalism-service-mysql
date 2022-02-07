@@ -5,12 +5,14 @@ use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractSqlStatementCommand;
+use Exception;
 
 class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
 {
     /**
      * @param SqlDataObjectInterface $object
      * @throws MinimalismException
+     * @throws Exception
      */
     public function __construct(
         SqlDataObjectInterface $object,

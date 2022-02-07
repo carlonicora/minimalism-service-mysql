@@ -8,6 +8,7 @@ use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use Exception;
 use mysqli;
 
 class SqlCommand
@@ -58,7 +59,7 @@ class SqlCommand
      * @param SqlFactoryInterface|SqlDataObjectInterface $factory
      * @param int $retry
      * @return array|null
-     * @throws MinimalismException
+     * @throws MinimalismException|Exception
      */
     public function execute(
         DatabaseOperationType $databaseOperationType,
