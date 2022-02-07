@@ -28,4 +28,18 @@ trait SqlDataObjectTrait
     {
         return SqlTableFactory::create($this->getTableClass());
     }
+
+    /**
+     * @param string $fieldName
+     * @param mixed $value
+     * @return mixed
+     * @noinspection PhpUnusedParameterInspection
+     */
+    public function translateCustomField(
+        string $fieldName,
+        mixed $value=null,
+    ): mixed
+    {
+        return null;
+    }
 }
