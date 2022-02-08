@@ -332,8 +332,49 @@ class SqlFactory implements SqlFactoryInterface
             $response .= $additionalSql;
         } else {
             $isFirstWhere = true;
+            $parameterCount=0;
             foreach ($this->where as $field) {
-                $response .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field[1]->getFullName() . $field[0]->value . '?';
+                $parameterCount++;
+                $response .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field[1]->getFullName();
+
+                $remove = true;
+
+                if ($this->parameters[$parameterCount] === null){
+                    if ($field[0]->value === SqlComparison::Equal) {
+                        $response .= ' IS NULL';
+                    } else {
+                        $response .= ' IS NOT NULL';
+                    }
+                } else {
+                    /** @var SqlComparison $a */
+                    $a = $field[0];
+                    switch ($a) {
+                        case SqlComparison::In:
+                            $response .= ' IN (' . $this->parameters[$parameterCount] . ')';
+                            break;
+                        case SqlComparison::NotIn:
+                            $response .= ' NOT IN (' . $this->parameters[$parameterCount] . ')';
+                            break;
+                        case SqlComparison::Like:
+                            $response .= ' LIKE \'%' . $this->parameters[$parameterCount] . '%\'';
+                            break;
+                        case SqlComparison::LikeLeft:
+                            $response .= ' LIKE \'%' . $this->parameters[$parameterCount] . '\'';
+                            break;
+                        case SqlComparison::LikeRight:
+                            $response .= ' LIKE \'' . $this->parameters[$parameterCount] . '%\'';
+                            break;
+                        default:
+                            $remove = false;
+                            $response .= $a->value . '?';
+                            break;
+                    }
+                }
+
+                if ($remove){
+                    array_splice($this->parameters, $parameterCount, 1);
+                    $this->parameters[0] = substr($this->parameters[0],0,$parameterCount-1).substr($this->parameters[0],$parameterCount,strlen($this->parameters[0])-($parameterCount-1));
+                }
                 $isFirstWhere = false;
             }
 
