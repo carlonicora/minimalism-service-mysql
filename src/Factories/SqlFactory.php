@@ -45,6 +45,12 @@ class SqlFactory implements SqlFactoryInterface
     /** @var array{SqlFieldInterface,bool} */
     private array $orderBy=[];
 
+    /** @var int|null  */
+    private ?int $start=null;
+
+    /** @var int|null  */
+    private ?int $length=null;
+
     /**
      * @param string $tableClass
      * @throws MinimalismException
@@ -243,6 +249,21 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
+     * @param int $start
+     * @param int $length
+     * @return SqlFactoryInterface
+     */
+    public function limit(
+        int $start,
+        int $length,
+    ): SqlFactoryInterface
+    {
+        $this->start = $start;
+        $this->length = $length;
+        return $this;
+    }
+
+    /**
      * @return SqlTableInterface
      */
     public function getTable(
@@ -335,6 +356,10 @@ class SqlFactory implements SqlFactoryInterface
                     $isFirstOrderBy = false;
                 }
             }
+        }
+
+        if ($this->databaseOperationType === DatabaseOperationType::Read && $this->start !== null && $this->length !== null) {
+            $response .= ' LIMIT ' . $this->start . ',' . $this->length;
         }
 
         $response .= ';';
