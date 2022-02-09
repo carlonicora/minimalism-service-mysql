@@ -73,7 +73,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @param SqlFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param class-string<InstanceOfType>|null $sqlObjectInterfaceClass
-     * @param bool $expectsSingleRecord
+     * @param bool $requireObjectsList
      * @return InstanceOfType|array
      * @throws MinimalismException|Exception|Throwable
      */
@@ -81,7 +81,7 @@ class MySQL extends AbstractService implements SqlInterface
         SqlFactoryInterface|SqlDataObjectInterface|array $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $sqlObjectInterfaceClass=null,
-        bool $expectsSingleRecord=true,
+        bool $requireObjectsList=false,
     ): SqlDataObjectInterface|array
     {
         $response = $this->execute(
@@ -91,13 +91,13 @@ class MySQL extends AbstractService implements SqlInterface
         );
 
         if ($sqlObjectInterfaceClass !== null){
-            if ($expectsSingleRecord){
-                $response = $this->returnSingleObject(
+            if ($requireObjectsList){
+                $response = $this->returnObjectArray(
                     recordset: $response,
                     objectType: $sqlObjectInterfaceClass,
                 );
             } else {
-                $response = $this->returnObjectArray(
+                $response = $this->returnSingleObject(
                     recordset: $response,
                     objectType: $sqlObjectInterfaceClass,
                 );
@@ -112,7 +112,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @param SqlFactoryInterface $factory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param class-string<InstanceOfType>|null $sqlObjectInterfaceClass
-     * @param bool $expectsSingleRecord
+     * @param bool $requireObjectsList
      * @return InstanceOfType|array
      * @throws MinimalismException|Exception
      */
@@ -120,7 +120,7 @@ class MySQL extends AbstractService implements SqlInterface
         SqlFactoryInterface $factory,
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $sqlObjectInterfaceClass=null,
-        bool $expectsSingleRecord=true,
+        bool $requireObjectsList=false,
     ): SqlDataObjectInterface|array
     {
         $response = null;
@@ -144,13 +144,13 @@ class MySQL extends AbstractService implements SqlInterface
         }
 
         if ($sqlObjectInterfaceClass !== null){
-            if ($expectsSingleRecord){
-                $response = $this->returnSingleObject(
+            if ($requireObjectsList){
+                $response = $this->returnObjectArray(
                     recordset: $response,
                     objectType: $sqlObjectInterfaceClass,
                 );
             } else {
-                $response = $this->returnObjectArray(
+                $response = $this->returnSingleObject(
                     recordset: $response,
                     objectType: $sqlObjectInterfaceClass,
                 );
