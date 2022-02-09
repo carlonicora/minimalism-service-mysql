@@ -54,4 +54,13 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
     {
         return $this->factory->getInsertedArray();
     }
+
+    /**
+     * @return SqlTableInterface
+     */
+    public function getTable(
+    ): SqlTableInterface
+    {
+        return $this->factory->getTable();
+    }
 }
