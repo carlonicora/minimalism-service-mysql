@@ -5,14 +5,12 @@ use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Data\SqlComparisonObject;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
-use IntBackedEnum;
 use UnitEnum;
 
 class SqlFactory implements SqlFactoryInterface
@@ -41,7 +39,7 @@ class SqlFactory implements SqlFactoryInterface
     /** @var SqlComparisonObject[]  */
     private array $where=[];
 
-    /** @var SqlFieldInterface[] */
+    /** @var UnitEnum[] */
     private array $groupBy=[];
 
     /** @var SqlComparisonObject[] */
@@ -105,7 +103,7 @@ class SqlFactory implements SqlFactoryInterface
         $this->operandAndFields = 'SELECT ';
 
         foreach ($fields as $field){
-            $this->operandAndFields .= self::create(get_class($field))->getTable()->getFieldByName($field->name)->getFullName();
+            $this->operandAndFields .= self::create(get_class($field))->getTable()->getFieldByName($field->name)->getFullName() . ',';
         }
 
         $this->operandAndFields = substr($this->operandAndFields, 0, -1);
@@ -218,7 +216,7 @@ class SqlFactory implements SqlFactoryInterface
         UnitEnum|string $field,
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
-        ?IntBackedEnum $stringParameterType=null,
+        ?UnitEnum $stringParameterType=null,
         bool $isHaving=false,
     ): void
     {
@@ -259,7 +257,7 @@ class SqlFactory implements SqlFactoryInterface
         UnitEnum|string $field,
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
-        ?IntBackedEnum $stringParameterType=null,
+        ?UnitEnum $stringParameterType=null,
     ): SqlFactoryInterface
     {
         $this->addParam(
@@ -284,7 +282,7 @@ class SqlFactory implements SqlFactoryInterface
         UnitEnum|string $field,
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
-        ?IntBackedEnum $stringParameterType=null,
+        ?UnitEnum $stringParameterType=null,
     ): SqlFactoryInterface
     {
         $this->addParam(
@@ -395,7 +393,7 @@ class SqlFactory implements SqlFactoryInterface
             if ($this->databaseOperationType === DatabaseOperationType::Read) {
                 $isFirstGroupBy = true;
                 foreach ($this->groupBy as $field) {
-                    $response .= ' ' . ($isFirstGroupBy ? 'GROUP BY ' : ',') . $field->getFullName();
+                    $response .= ' ' . ($isFirstGroupBy ? 'GROUP BY ' : ',') . self::create(get_class($field))->getTable()->getField($field)->getFullName();
                     $isFirstGroupBy = false;
                 }
 
@@ -466,48 +464,57 @@ class SqlFactory implements SqlFactoryInterface
 
             if ($isUpdate){
                 if ($field->getField()->isPrimaryKey()) {
-                    $additionalSql .= ' ' . ($isFirstWhere ? 'WHERE' : 'AND') . ' ' . $field->getField()->getFullName();
+                    $additionalSql .= ' ' . ($isFirstWhere ? $initialStatement : 'AND') . ' ' . $field->getField()->getFullName();
+                    $isFirstWhere = false;
                 } else {
                     $response .= $field->getField()->getFullName();
                 }
             } else {
                 $response .= ' ' . ($isFirstWhere ? $initialStatement : 'AND') . ' ' . $fieldName;
+                $isFirstWhere = false;
             }
 
             $remove = true;
 
+            $temporaryResponse = '';
             if ($this->parameters[$parameterCount] === null){
                 if ($field->getComparison() === SqlComparison::Equal) {
-                    $response .= ' IS NULL';
+                    $temporaryResponse .= ' IS NULL';
                 } else {
-                    $response .= ' IS NOT NULL';
+                    $temporaryResponse .= ' IS NOT NULL';
                 }
             } else {
                 switch ($field->getComparison()) {
                     case SqlComparison::In:
-                        $response .= ' IN (' . $this->parameters[$parameterCount] . ')';
+                        $temporaryResponse .= ' IN (' . $this->parameters[$parameterCount] . ')';
                         break;
                     case SqlComparison::NotIn:
-                        $response .= ' NOT IN (' . $this->parameters[$parameterCount] . ')';
+                        $temporaryResponse .= ' NOT IN (' . $this->parameters[$parameterCount] . ')';
                         break;
                     case SqlComparison::Like:
-                        $response .= ' LIKE \'%' . $this->parameters[$parameterCount] . '%\'';
+                        $temporaryResponse .= ' LIKE \'%' . $this->parameters[$parameterCount] . '%\'';
                         break;
                     case SqlComparison::LikeLeft:
-                        $response .= ' LIKE \'%' . $this->parameters[$parameterCount] . '\'';
+                        $temporaryResponse .= ' LIKE \'%' . $this->parameters[$parameterCount] . '\'';
                         break;
                     case SqlComparison::LikeRight:
-                        $response .= ' LIKE \'' . $this->parameters[$parameterCount] . '%\'';
+                        $temporaryResponse .= ' LIKE \'' . $this->parameters[$parameterCount] . '%\'';
                         break;
                     default:
                         $remove = false;
-                        $response .= $field->getComparison()->value . '?';
+                        $temporaryResponse .= $field->getComparison()->value . '?';
                         break;
                 }
             }
 
             if ($isUpdate){
-                $response .= ',';
+                if ($field->getField()->isPrimaryKey()) {
+                    $additionalSql .= $temporaryResponse;
+                } else {
+                    $response .= $temporaryResponse . ',';
+                }
+            } else {
+                $response .= $temporaryResponse;
             }
 
             if ($remove){
@@ -515,7 +522,6 @@ class SqlFactory implements SqlFactoryInterface
                 $this->parameters[0] = substr($this->parameters[0],0,$parameterCount-1).substr($this->parameters[0],$parameterCount,strlen($this->parameters[0])-($parameterCount-1));
                 $parameterCount--;
             }
-            $isFirstWhere = false;
         }
 
         if ($isUpdate) {
