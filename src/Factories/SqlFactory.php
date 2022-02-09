@@ -520,6 +520,10 @@ class SqlFactory implements SqlFactoryInterface
             if ($remove){
                 array_splice($this->parameters, $parameterCount, 1);
                 $this->parameters[0] = substr($this->parameters[0],0,$parameterCount-1).substr($this->parameters[0],$parameterCount,strlen($this->parameters[0])-($parameterCount-1));
+
+                if ($this->parameters === ['']) {
+                    $this->parameters = [];
+                }
                 $parameterCount--;
             }
         }
