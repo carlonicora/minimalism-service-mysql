@@ -111,6 +111,6 @@ class SqlField implements SqlFieldInterface
     public function isAutoIncrement(
     ): bool
     {
-        return (($this->fieldOption?->value & FieldOption::AutoIncrement->value) > 0);
+        return (($this->fieldOption?->value & FieldOption::AutoIncrement->value) > FieldOption::PrimaryKey->value);
     }
 }
