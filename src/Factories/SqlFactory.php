@@ -355,7 +355,7 @@ class SqlFactory implements SqlFactoryInterface
             $response .= ' (';
 
             foreach ($this->where as $field){
-                $response .= $field[1]->getFullName() . ',';
+                $response .= $field->getField()->getFullName() . ',';
                 $additionalSql .= '?,';
             }
 
