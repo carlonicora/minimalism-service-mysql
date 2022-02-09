@@ -23,4 +23,10 @@ interface SqlStatementCommandInterface
      */
     public function getParameters(
     ): array;
+
+    /**
+     * @return array
+     */
+    public function getInsertedArray(
+    ): array;
 }

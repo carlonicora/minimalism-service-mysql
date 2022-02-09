@@ -44,4 +44,14 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
     {
         return $this->factory->getParameters();
     }
+
+    /**
+     * @return array
+     * @throws MinimalismException
+     */
+    public function getInsertedArray(
+    ): array
+    {
+        return $this->factory->getInsertedArray();
+    }
 }
