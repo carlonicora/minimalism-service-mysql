@@ -332,6 +332,28 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
+     * @return array
+     * @throws MinimalismException
+     */
+    public function getInsertedArray(
+    ): array
+    {
+        if ($this->databaseOperationType !== DatabaseOperationType::Create) {
+            throw new MinimalismException(HttpCode::InternalServerError, 'Get Inserted Array requested for non-creation query');
+        }
+
+        $response = [];
+
+        $valueCount = 1;
+        foreach ($this->where as $item){
+            $response[$item->getField()->getName()] = $this->parameters[$valueCount];
+            $valueCount++;
+        }
+
+        return $response;
+    }
+
+    /**
      * @return string
      * @throws MinimalismException
      */

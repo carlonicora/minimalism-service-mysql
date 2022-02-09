@@ -2,7 +2,6 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
-use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
@@ -112,10 +111,10 @@ class SqlCommand
                 }
             }
         } elseif ($databaseOperationType === DatabaseOperationType::Create) {
-            $response = SqlDataObjectFactory::createData(object: $factory);
+            $response = $sqlFactory->getInsertedArray();
 
-            if ($factory->getTable()->getAutoIncrementField() !== null){
-                $response[$factory->getTable()->getAutoIncrementField()->getName()] = $this->getInsertedId();
+            if ($sqlFactory->getTable()->getAutoIncrementField() !== null){
+                $response[$sqlFactory->getTable()->getAutoIncrementField()->getName()] = $this->getInsertedId();
             }
 
             $this->setOriginalValues($response);

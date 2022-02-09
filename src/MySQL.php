@@ -207,9 +207,9 @@ class MySQL extends AbstractService implements SqlInterface
      * @throws Throwable
      */
     private function execute(
-        DatabaseOperationType                         $databaseOperationType,
+        DatabaseOperationType $databaseOperationType,
         SqlFactoryInterface|SqlDataObjectInterface|array $factory,
-        ?CacheBuilderInterface                        $cacheBuilder,
+        ?CacheBuilderInterface $cacheBuilder,
     ): ?array
     {
         $response = null;
