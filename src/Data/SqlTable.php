@@ -10,6 +10,7 @@ use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\SqlTableFactory;
 use ReflectionEnum;
 use ReflectionException;
+use UnitEnum;
 
 #[Attribute]
 class SqlTable implements SqlTableInterface
@@ -175,5 +176,17 @@ class SqlTable implements SqlTableInterface
         throw new MinimalismException(
             HttpCode::InternalServerError
         );
+    }
+
+    /**
+     * @param UnitEnum $field
+     * @return SqlFieldInterface
+     * @throws MinimalismException
+     */
+    public function getField(
+        UnitEnum $field,
+    ): SqlFieldInterface
+    {
+        return $this->getFieldByName($field->name);
     }
 }
