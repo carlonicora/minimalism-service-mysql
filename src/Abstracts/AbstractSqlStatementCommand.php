@@ -4,13 +4,13 @@ namespace CarloNicora\Minimalism\Services\MySQL\Abstracts;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
-use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\SqlQueryFactory;
 use CarloNicora\Minimalism\Services\MySQL\Interfaces\SqlStatementCommandInterface;
 
 abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterface
 {
-    /** @var SqlFactory  */
-    protected SqlFactory $factory;
+    /** @var SqlQueryFactory  */
+    protected SqlQueryFactory $factory;
 
     /** @var SqlTableInterface  */
     protected SqlTableInterface $table;
@@ -23,7 +23,7 @@ abstract class AbstractSqlStatementCommand implements SqlStatementCommandInterfa
         SqlDataObjectInterface $object,
     )
     {
-        $this->factory = SqlFactory::create($object->getTableClass());
+        $this->factory = SqlQueryFactory::create($object->getTableClass());
     }
 
     /**

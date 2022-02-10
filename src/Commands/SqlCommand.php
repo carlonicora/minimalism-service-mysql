@@ -3,7 +3,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
@@ -17,12 +17,12 @@ class SqlCommand
 
     /**
      * @param ConnectionFactory $connectionFactory
-     * @param SqlFactoryInterface|SqlDataObjectInterface $factory
+     * @param SqlQueryFactoryInterface|SqlDataObjectInterface $factory
      * @throws MinimalismException
      */
     public function __construct(
         ConnectionFactory $connectionFactory,
-        SqlFactoryInterface|SqlDataObjectInterface $factory,
+        SqlQueryFactoryInterface|SqlDataObjectInterface $factory,
     )
     {
         $this->connection = $connectionFactory->create($factory->getTable());
@@ -55,26 +55,26 @@ class SqlCommand
 
     /**
      * @param DatabaseOperationType $databaseOperationType
-     * @param SqlFactoryInterface|SqlDataObjectInterface $factory
+     * @param SqlQueryFactoryInterface|SqlDataObjectInterface $queryFactory
      * @param int $retry
      * @return array|null
      * @throws MinimalismException|Exception
      */
     public function execute(
-        DatabaseOperationType $databaseOperationType,
-        SqlFactoryInterface|SqlDataObjectInterface $factory,
-        int $retry=0,
+        DatabaseOperationType                           $databaseOperationType,
+        SqlQueryFactoryInterface|SqlDataObjectInterface $queryFactory,
+        int                                             $retry=0,
     ): ?array
     {
         $response = null;
 
         $this->connection->autocommit(false);
 
-        $interfaces = class_implements($factory);
-        if (array_key_exists(SqlFactoryInterface::class, $interfaces)){
-            $sqlFactory = $factory;
+        $interfaces = class_implements($queryFactory);
+        if (array_key_exists(SqlQueryFactoryInterface::class, $interfaces)){
+            $sqlFactory = $queryFactory;
         } else {
-            $sqlFactory = $databaseOperationType->getSqlStatementCommand($factory);
+            $sqlFactory = $databaseOperationType->getSqlStatementCommand($queryFactory);
         }
         $sql = $sqlFactory->getSql();
         $parameters = $sqlFactory->getParameters();
@@ -94,7 +94,7 @@ class SqlCommand
                 $retry++;
                 usleep(100000);
                 /** @noinspection UnusedFunctionResultInspection */
-                $this->execute($databaseOperationType, $factory, $retry);
+                $this->execute($databaseOperationType, $queryFactory, $retry);
             } else {
                 throw ExceptionFactory::MySQLStatementExecutionFailed->create($sql . '(' . $statement->error. ')');
             }

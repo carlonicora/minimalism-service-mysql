@@ -4,16 +4,16 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
-use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Data\SqlComparisonObject;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
 use UnitEnum;
 
-class SqlFactory implements SqlFactoryInterface
+class SqlQueryFactory implements SqlQueryFactoryInterface
 {
     /** @var DatabaseOperationType  */
     private DatabaseOperationType $databaseOperationType;
@@ -67,21 +67,21 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param string $tableClass
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
     public static function create(
         string $tableClass,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         return new self($tableClass);
     }
 
     /**
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function selectAll(
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
@@ -92,12 +92,12 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param UnitEnum[] $fields
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
     public function selectFields(
         array $fields,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT ';
@@ -114,10 +114,10 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function delete(
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
@@ -127,10 +127,10 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function update(
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
@@ -140,10 +140,10 @@ class SqlFactory implements SqlFactoryInterface
     }
 
     /**
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function insert(
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT INTO';
@@ -154,11 +154,11 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param SqlJoinFactoryInterface $join
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function addJoin(
         SqlJoinFactoryInterface $join
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->join[] = $join;
 
@@ -167,11 +167,11 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param UnitEnum[] $fields
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function addGroupByFields(
         array $fields,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->groupBy = $fields;
 
@@ -180,11 +180,11 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param SqlOrderByInterface[] $fields
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function addOrderByFields(
         array $fields,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->orderBy = $fields;
 
@@ -193,11 +193,11 @@ class SqlFactory implements SqlFactoryInterface
 
     /**
      * @param string $sql
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function setSql(
         string $sql,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->sql = $sql;
 
@@ -250,7 +250,7 @@ class SqlFactory implements SqlFactoryInterface
      * @param mixed $value
      * @param SqlComparison|null $comparison
      * @param FieldType|null $stringParameterType
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
     public function addParameter(
@@ -258,7 +258,7 @@ class SqlFactory implements SqlFactoryInterface
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
         ?UnitEnum $stringParameterType=null,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->addParam(
             field: $field,
@@ -275,7 +275,7 @@ class SqlFactory implements SqlFactoryInterface
      * @param mixed $value
      * @param SqlComparison|null $comparison
      * @param FieldType|null $stringParameterType
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
     public function addHavingParameter(
@@ -283,7 +283,7 @@ class SqlFactory implements SqlFactoryInterface
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
         ?UnitEnum $stringParameterType=null,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->addParam(
             field: $field,
@@ -299,12 +299,12 @@ class SqlFactory implements SqlFactoryInterface
     /**
      * @param int $start
      * @param int $length
-     * @return SqlFactoryInterface
+     * @return SqlQueryFactoryInterface
      */
     public function limit(
         int $start,
         int $length,
-    ): SqlFactoryInterface
+    ): SqlQueryFactoryInterface
     {
         $this->start = $start;
         $this->length = $length;

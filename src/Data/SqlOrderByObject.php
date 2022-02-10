@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Data;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlFieldInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
-use CarloNicora\Minimalism\Services\MySQL\Factories\SqlFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\SqlQueryFactory;
 use UnitEnum;
 
 class SqlOrderByObject implements SqlOrderByInterface
@@ -27,7 +27,7 @@ class SqlOrderByObject implements SqlOrderByInterface
     public function getField(
     ): SqlFieldInterface
     {
-        return SqlFactory::create(get_class($this->field))->getTable()->getFieldByName($this->field->name);
+        return SqlQueryFactory::create(get_class($this->field))->getTable()->getFieldByName($this->field->name);
     }
 
     /**
