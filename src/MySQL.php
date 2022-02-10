@@ -161,13 +161,13 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
-     * @param SqlDataObjectInterface|SqlDataObjectInterface[] $queryFactory
+     * @param SqlDataObjectInterface|SqlQueryFactoryInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @return void
      * @throws MinimalismException|Throwable
      */
     public function update(
-        SqlDataObjectInterface|array $queryFactory,
+        SqlDataObjectInterface|SqlQueryFactoryInterface|array $queryFactory,
         ?CacheBuilderInterface $cacheBuilder=null,
     ): void
     {
