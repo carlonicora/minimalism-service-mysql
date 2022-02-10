@@ -477,7 +477,7 @@ class SqlFactory implements SqlFactoryInterface
             $remove = true;
 
             $temporaryResponse = '';
-            if ($this->parameters[$parameterCount] === null){
+            if ($this->parameters[$parameterCount] === null && !$isUpdate){
                 if ($field->getComparison() === SqlComparison::Equal) {
                     $temporaryResponse .= ' IS NULL';
                 } else {
