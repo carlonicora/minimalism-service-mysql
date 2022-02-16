@@ -24,10 +24,12 @@ class SqlTable implements SqlTableInterface
     /**
      * @param string $name
      * @param string $databaseIdentifier
+     * @param bool $insertIgnore
      */
     public function __construct(
         private string $name,
         private string $databaseIdentifier,
+        private bool $insertIgnore=false,
     )
     {
         $this->databaseName = SqlTableFactory::getDatabaseName($databaseIdentifier);
@@ -100,6 +102,15 @@ class SqlTable implements SqlTableInterface
     ): string
     {
         return $this->databaseName;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInsertIgnore(
+    ): bool
+    {
+        return $this->insertIgnore;
     }
 
     /**

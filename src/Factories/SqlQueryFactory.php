@@ -9,6 +9,7 @@ use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Data\SqlComparisonObject;
+use CarloNicora\Minimalism\Services\MySQL\Data\SqlTable;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
 use UnitEnum;
@@ -18,8 +19,8 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     /** @var DatabaseOperationType  */
     private DatabaseOperationType $databaseOperationType;
 
-    /** @var SqlTableInterface  */
-    private SqlTableInterface $table;
+    /** @var SqlTableInterface|SqlTable  */
+    private SqlTableInterface|SqlTable $table;
 
     /** @var string|null  */
     private ?string $sql=null;
@@ -146,7 +147,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     ): SqlQueryFactoryInterface
     {
         $this->databaseOperationType = DatabaseOperationType::Create;
-        $this->operandAndFields = 'INSERT INTO';
+        $this->operandAndFields = 'INSERT' . ($this->table->isInsertIgnore() ? ' IGNORE' : '') . ' INTO';
         $this->from = $this->table->getFullName();
 
         return $this;
