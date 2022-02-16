@@ -75,7 +75,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         string $tableClass,
     ): SqlQueryFactoryInterface
     {
-        return new self($tableClass);
+        return (new self($tableClass))->selectAll();
     }
 
     /**
@@ -92,7 +92,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     }
 
     /**
-     * @param UnitEnum[] $fields
+     * @param UnitEnum[]|string[] $fields
      * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
@@ -104,7 +104,11 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         $this->operandAndFields = 'SELECT ';
 
         foreach ($fields as $field){
-            $this->operandAndFields .= self::create(get_class($field))->getTable()->getFieldByName($field->name)->getFullName() . ',';
+            if (is_string($field)){
+                $this->operandAndFields .= $field . ',';
+            } else {
+                $this->operandAndFields .= self::create(get_class($field))->getTable()->getFieldByName($field->name)->getFullName() . ',';
+            }
         }
 
         $this->operandAndFields = substr($this->operandAndFields, 0, -1);
