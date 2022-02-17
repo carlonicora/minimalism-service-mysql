@@ -427,7 +427,29 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function getParameters(
     ): array
     {
-        return $this->parameters;
+        if ($this->databaseOperationType === DatabaseOperationType::Update){
+            $primaryKeyIds = '';
+            $primaryKeys = [];
+            $nonKeyIds = '';
+            $nonKeys = [];
+
+            $parameterCount = 1;
+            foreach ($this->where as $field){
+                if ($field->getField()->isPrimaryKey()){
+                    $primaryKeys[] = $this->parameters[$parameterCount];
+                    $primaryKeyIds .= substr($this->parameters[0], $parameterCount-1, 1);
+                } else {
+                    $nonKeys[] = $this->parameters[$parameterCount];
+                    $nonKeyIds .= substr($this->parameters[0], $parameterCount-1, 1);
+                }
+                $parameterCount++;
+            }
+
+            $response = [$nonKeyIds . $primaryKeyIds, ...$nonKeys, ...$primaryKeys];
+        } else {
+            $response = $this->parameters;
+        }
+        return $response;
     }
 
     /**
