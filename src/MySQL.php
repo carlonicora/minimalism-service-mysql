@@ -36,7 +36,7 @@ class MySQL extends AbstractService implements SqlInterface
             databaseConfigurations: $MINIMALISM_SERVICE_MYSQL,
         );
 
-        if (!$this->cache->useCaching()){
+        if (!$this->cache?->useCaching()){
             $this->cache = null;
         }
     }
