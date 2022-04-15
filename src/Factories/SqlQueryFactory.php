@@ -1,6 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
+use BackedEnum;
 use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
@@ -247,7 +248,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
             $this->where[] = new SqlComparisonObject(field: $sqlField, comparison: $comparison);
         }
 
-        $this->parameters[] = $value;
+        $this->parameters[] = ($value instanceof BackedEnum) ? $value->value : $value;
     }
 
     /**
