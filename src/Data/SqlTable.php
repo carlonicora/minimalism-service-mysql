@@ -27,9 +27,9 @@ class SqlTable implements SqlTableInterface
      * @param bool $insertIgnore
      */
     public function __construct(
-        private string $name,
+        private readonly string $name,
         private string $databaseIdentifier,
-        private bool $insertIgnore=false,
+        private readonly bool $insertIgnore=false,
     )
     {
         $this->databaseName = SqlTableFactory::getDatabaseName($databaseIdentifier);
@@ -75,6 +75,16 @@ class SqlTable implements SqlTableInterface
     ): string
     {
         return $this->databaseIdentifier;
+    }
+
+    /**
+     * @param string $databaseIdentifier
+     */
+    public function setDatabaseIdentifier(
+        string $databaseIdentifier,
+    ): void
+    {
+        $this->databaseIdentifier = $databaseIdentifier;
     }
 
     /**

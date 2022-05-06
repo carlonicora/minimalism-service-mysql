@@ -22,11 +22,11 @@ class SqlField implements SqlFieldInterface
      * @param string $databaseName
      */
     public function __construct(
-        private IntBackedEnum|FieldType $fieldType=FieldType::String,
-        private IntBackedEnum|FieldOption|null $fieldOption=null,
-        private string $name='',
-        private string $tableName='',
-        private string $databaseName='',
+        private readonly IntBackedEnum|FieldType $fieldType=FieldType::String,
+        private readonly IntBackedEnum|FieldOption|null $fieldOption=null,
+        private readonly string $name='',
+        private readonly string $tableName='',
+        private readonly string $databaseName='',
     )
     {
     }

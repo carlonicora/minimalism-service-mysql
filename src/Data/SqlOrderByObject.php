@@ -14,8 +14,8 @@ class SqlOrderByObject implements SqlOrderByInterface
      * @param bool $isDesc
      */
     public function __construct(
-        private UnitEnum $field,
-        private bool $isDesc=false,
+        private readonly UnitEnum $field,
+        private readonly bool $isDesc=false,
     )
     {
     }

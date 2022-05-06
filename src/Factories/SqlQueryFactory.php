@@ -58,13 +58,15 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
 
     /**
      * @param string $tableClass
+     * @param string|null $overrideDatabaseIdentifier
      * @throws MinimalismException
      */
     public function __construct(
-        private string $tableClass,
+        private readonly string $tableClass,
+        ?string $overrideDatabaseIdentifier=null,
     )
     {
-        $this->table = SqlTableFactory::create($this->tableClass);
+        $this->table = SqlTableFactory::create($this->tableClass, $overrideDatabaseIdentifier);
     }
 
     /**

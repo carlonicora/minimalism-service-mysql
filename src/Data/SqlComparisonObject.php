@@ -11,8 +11,8 @@ class SqlComparisonObject
      * @param SqlComparison $comparison
      */
     public function __construct(
-        private SqlFieldInterface|string $field,
-        private SqlComparison $comparison,
+        private readonly SqlFieldInterface|string $field,
+        private readonly SqlComparison $comparison,
     )
     {
     }

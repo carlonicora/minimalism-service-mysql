@@ -47,16 +47,22 @@ class SqlTableFactory
 
     /**
      * @param string $tableClass
+     * @param string|null $overrideDatabaseIdentifier
      * @return SqlTableInterface
      * @throws MinimalismException
      */
     public static function create(
-        string $tableClass
+        string $tableClass,
+        ?string $overrideDatabaseIdentifier=null,
     ): SqlTableInterface
     {
         try {
             /** @var SqlTable $response */
             $response = (new ReflectionClass($tableClass))->getAttributes(SqlTable::class)[0]->newInstance();
+
+            if ($overrideDatabaseIdentifier !== null){
+                $response->setDatabaseIdentifier($overrideDatabaseIdentifier);
+            }
             $response->initialise(tableClass: $tableClass);
             return $response;
         } catch (ReflectionException) {

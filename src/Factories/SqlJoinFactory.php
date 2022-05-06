@@ -14,9 +14,9 @@ class SqlJoinFactory implements SqlJoinFactoryInterface
      * @param SqlJoinType|null $joinType
      */
     public function __construct(
-        private UnitEnum $primaryKey,
-        private UnitEnum $foreignKey,
-        private ?SqlJoinType $joinType=null,
+        private readonly UnitEnum $primaryKey,
+        private readonly UnitEnum $foreignKey,
+        private readonly ?SqlJoinType $joinType=null,
     )
     {
     }
