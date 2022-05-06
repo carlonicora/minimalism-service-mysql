@@ -71,14 +71,16 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
 
     /**
      * @param string $tableClass
+     * @param string|null $overrideDatabaseIdentifier
      * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
     public static function create(
         string $tableClass,
+        ?string $overrideDatabaseIdentifier=null,
     ): SqlQueryFactoryInterface
     {
-        return (new self($tableClass))->selectAll();
+        return (new self($tableClass, $overrideDatabaseIdentifier))->selectAll();
     }
 
     /**
