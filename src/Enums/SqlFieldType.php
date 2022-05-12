@@ -16,6 +16,7 @@ enum SqlFieldType: string
     case json = 'json';
     case linestring = 'linestring';
     case longblob = 'longblob';
+    case longtext = 'longtext';
     case mediumblob = 'mediumblob';
     case mediumint = 'mediumint';
     case mediumtext = 'mediumtext';
