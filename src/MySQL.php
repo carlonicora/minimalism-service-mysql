@@ -74,20 +74,24 @@ class MySQL extends AbstractService implements SqlInterface
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param class-string<InstanceOfType>|null $responseType
      * @param bool $requireObjectsList
+     * @param array $options
      * @return InstanceOfType|array
-     * @throws MinimalismException|Exception|Throwable
+     * @throws MinimalismException
+     * @throws Throwable
      */
     public function create(
         SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $responseType=null,
         bool $requireObjectsList=false,
+        array $options=[],
     ): SqlDataObjectInterface|array
     {
         $response = $this->execute(
             databaseOperationType: DatabaseOperationType::Create,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
+            options: $options,
         );
 
         if ($responseType !== null){
@@ -113,14 +117,16 @@ class MySQL extends AbstractService implements SqlInterface
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param class-string<InstanceOfType>|null $responseType
      * @param bool $requireObjectsList
+     * @param array $options
      * @return InstanceOfType|array
-     * @throws MinimalismException|Exception
+     * @throws Exception
      */
     public function read(
         SqlQueryFactoryInterface $queryFactory,
         ?CacheBuilderInterface $cacheBuilder=null,
         ?string $responseType=null,
         bool $requireObjectsList=false,
+        array $options=[],
     ): SqlDataObjectInterface|array
     {
         $response = null;
@@ -129,9 +135,16 @@ class MySQL extends AbstractService implements SqlInterface
         }
 
         if ($response === null){
-            $sqlCommand = new SqlCommand($this->connectionFactory, $queryFactory);
+            $sqlCommand = new SqlCommand(
+                connectionFactory: $this->connectionFactory,
+                factory: $queryFactory,
+                options: $options,
+            );
             try {
-                $response = $sqlCommand->execute(databaseOperationType: DatabaseOperationType::Read, queryFactory: $queryFactory);
+                $response = $sqlCommand->execute(
+                    databaseOperationType: DatabaseOperationType::Read,
+                    queryFactory: $queryFactory,
+                );
             } finally {
                 $sqlCommand = null;
             }
@@ -163,12 +176,15 @@ class MySQL extends AbstractService implements SqlInterface
     /**
      * @param SqlDataObjectInterface|SqlQueryFactoryInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
+     * @param array $options
      * @return void
-     * @throws MinimalismException|Throwable
+     * @throws MinimalismException
+     * @throws Throwable
      */
     public function update(
         SqlDataObjectInterface|SqlQueryFactoryInterface|array $queryFactory,
         ?CacheBuilderInterface $cacheBuilder=null,
+        array $options=[],
     ): void
     {
         /** @noinspection UnusedFunctionResultInspection */
@@ -176,18 +192,22 @@ class MySQL extends AbstractService implements SqlInterface
             databaseOperationType: DatabaseOperationType::Update,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
+            options: $options,
         );
     }
 
     /**
      * @param SqlDataObjectInterface|SqlQueryFactoryInterface|array $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
+     * @param array $options
      * @return void
-     * @throws MinimalismException|Throwable
+     * @throws MinimalismException
+     * @throws Throwable
      */
     public function delete(
         SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
         ?CacheBuilderInterface $cacheBuilder=null,
+        array $options=[],
     ): void
     {
         /** @noinspection UnusedFunctionResultInspection */
@@ -195,6 +215,7 @@ class MySQL extends AbstractService implements SqlInterface
             databaseOperationType: DatabaseOperationType::Delete,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
+            options: $options,
         );
     }
 
@@ -202,14 +223,16 @@ class MySQL extends AbstractService implements SqlInterface
      * @param DatabaseOperationType $databaseOperationType
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
+     * @param array $options
      * @return array|null
-     * @throws MinimalismException|Exception
+     * @throws MinimalismException
      * @throws Throwable
      */
     private function execute(
         DatabaseOperationType $databaseOperationType,
         SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
         ?CacheBuilderInterface $cacheBuilder,
+        array $options=[],
     ): ?array
     {
         $response = null;
@@ -222,8 +245,9 @@ class MySQL extends AbstractService implements SqlInterface
                 foreach ($queryFactory as $dataObjectInterface) {
                     if ($isFirstDataObjectInterface) {
                         $sqlCommand = new SqlCommand(
-                            $this->connectionFactory,
-                            $dataObjectInterface,
+                            connectionFactory: $this->connectionFactory,
+                            factory: $dataObjectInterface,
+                            options: $options,
                         );
                     }
                     $isFirstDataObjectInterface=false;
@@ -235,8 +259,9 @@ class MySQL extends AbstractService implements SqlInterface
                 }
             } else {
                 $sqlCommand = new SqlCommand(
-                    $this->connectionFactory,
-                    $queryFactory,
+                    connectionFactory: $this->connectionFactory,
+                    factory: $queryFactory,
+                    options: $options,
                 );
 
                 $singleResponse = $sqlCommand->execute($databaseOperationType, $queryFactory);

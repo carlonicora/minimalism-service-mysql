@@ -5,6 +5,7 @@ use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
+use CarloNicora\Minimalism\Services\MySQL\Enums\SqlOptions;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
 use Exception;
@@ -18,11 +19,13 @@ class SqlCommand
     /**
      * @param ConnectionFactory $connectionFactory
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface $factory
+     * @param SqlOptions[] $options
      * @throws MinimalismException
      */
     public function __construct(
         ConnectionFactory $connectionFactory,
         SqlQueryFactoryInterface|SqlDataObjectInterface $factory,
+        private readonly array $options,
     )
     {
         $this->connection = $connectionFactory->create($factory->getTable());
@@ -69,6 +72,7 @@ class SqlCommand
         $response = null;
 
         $this->connection->autocommit(false);
+        $this->runOptions();
 
         $interfaces = class_implements($queryFactory);
         if (array_key_exists(SqlQueryFactoryInterface::class, $interfaces)){
@@ -124,6 +128,8 @@ class SqlCommand
             throw ExceptionFactory::MySQLCloseFailed->create($statement->error);
         }
 
+        $this->runOptions(on: false);
+
         return $response;
     }
 
@@ -153,5 +159,19 @@ class SqlCommand
             $originalValues[$fieldName] = $fieldValue;
         }
         $record['originalValues'] = $originalValues;
+    }
+
+    /**
+     * @param bool $on
+     * @return void
+     */
+    public function runOptions(
+        bool $on=true,
+    ): void
+    {
+        foreach ($this->options as $option){
+            /** @noinspection UnusedFunctionResultInspection */
+            $this->connection->query(query: ($on ? $option->on() : $option->off()));
+        }
     }
 }
