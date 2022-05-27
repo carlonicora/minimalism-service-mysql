@@ -381,18 +381,22 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         }
 
         if ($this->databaseOperationType === DatabaseOperationType::Create){
-            $additionalSql = '';
-            $response .= ' (';
+            if (empty($this->where)) {
+                $response .= ' VALUES ()';
+            } else {
+                $additionalSql = '';
+                $response .= ' (';
 
-            foreach ($this->where as $field){
-                $response .= $field->getField()->getFullName() . ',';
-                $additionalSql .= '?,';
+                foreach ($this->where as $field){
+                    $response .= $field->getField()->getFullName() . ',';
+                    $additionalSql .= '?,';
+                }
+
+                $response = substr($response, 0, -1);
+                $additionalSql = substr($additionalSql, 0, -1);
+
+                $response .= ') VALUES (' . $additionalSql . ')';
             }
-
-            $response = substr($response, 0, -1);
-            $additionalSql = substr($additionalSql, 0, -1);
-
-            $response .= ') VALUES (' . $additionalSql . ')';
         } elseif  ($this->databaseOperationType === DatabaseOperationType::Update) {
             $response .= ' SET ';
 
