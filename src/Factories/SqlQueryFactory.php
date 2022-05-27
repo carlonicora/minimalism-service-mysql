@@ -522,9 +522,17 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
             } else {
                 switch ($field->getComparison()) {
                     case SqlComparison::In:
+                        if (is_array($this->parameters[$parameterCount])) {
+                            $temporaryResponse .= ' IN (' . implode(separator: ',', array: $this->parameters[$parameterCount]) . ')';
+                            break;
+                        }
                         $temporaryResponse .= ' IN (' . $this->parameters[$parameterCount] . ')';
                         break;
                     case SqlComparison::NotIn:
+                        if (is_array($this->parameters[$parameterCount])) {
+                            $temporaryResponse .= ' NOT IN (' . implode(separator: ',', array: $this->parameters[$parameterCount]) . ')';
+                            break;
+                        }
                         $temporaryResponse .= ' NOT IN (' . $this->parameters[$parameterCount] . ')';
                         break;
                     case SqlComparison::Like:
