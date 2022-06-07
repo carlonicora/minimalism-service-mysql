@@ -1,7 +1,7 @@
 {
   "name": "carlonicora/minimalism-service-mysql",
   "description": "MySQL service for minimalism",
-  "version": "5.0.3",
+  "version": "6.0.0",
   "homepage": "https://carlonicora.com",
   "time": "2019-05-14",
   "license": "MIT",
@@ -24,8 +24,8 @@
     "php": ">=8.1",
     "ext-mysqli": "*",
     "carlonicora/minimalism": "~13.0",
-    "carlonicora/minimalism-interface-data": "~1.0",
     "carlonicora/minimalism-interface-cache": "~1.0",
+    "carlonicora/minimalism-interface-sql": "~1.0",
     "ext-json": "*"
   }
 }

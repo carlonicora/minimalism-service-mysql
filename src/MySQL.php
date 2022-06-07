@@ -74,7 +74,7 @@ class MySQL extends AbstractService implements DataInterface
                 message: 'Database reader class missing: ' . $dbReader,
                 domain: 'mysql'
             );
-            throw new RuntimeException('Database reader class missing: ' . $dbReader, 500);
+            throw new RuntimeException('Database reader class missing', 500);
         }
 
         /** @var MySqlTableInterface $response */
