@@ -2,43 +2,61 @@
 namespace CarloNicora\Minimalism\Services\MySQL;
 
 use CarloNicora\Minimalism\Abstracts\AbstractService;
+use CarloNicora\Minimalism\Enums\HttpCode;
+use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataFunctionInterface;
-use CarloNicora\Minimalism\Interfaces\Data\Interfaces\DataInterface;
-use CarloNicora\Minimalism\Interfaces\LoggerInterface;
-use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
-use CarloNicora\Minimalism\Services\MySQL\Interfaces\MySqlTableInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
+use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
+use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
+use CarloNicora\Minimalism\Services\MySQL\Factories\SqlTableFactory;
 use Exception;
-use RuntimeException;
+use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use Throwable;
 
-class MySQL extends AbstractService implements DataInterface
+class MySQL extends AbstractService implements SqlInterface
 {
-    /** @var array */
-    private array $tableManagers = [];
-
-    /**
-     * @var ConnectionFactory
-     */
+    /** @var ConnectionFactory  */
     private ConnectionFactory $connectionFactory;
 
     /**
-     * MySQL constructor.
      * @param string $MINIMALISM_SERVICE_MYSQL
-     * @param LoggerInterface|null $logger
      * @param CacheInterface|null $cache
      */
     public function __construct(
         string $MINIMALISM_SERVICE_MYSQL,
-        private ?LoggerInterface $logger=null,
         private ?CacheInterface $cache=null,
     )
     {
         $this->connectionFactory = new ConnectionFactory(
-            $MINIMALISM_SERVICE_MYSQL,
-            $this->logger,
+            databaseConfigurations: $MINIMALISM_SERVICE_MYSQL,
         );
+
+        if (!$this->cache?->useCaching()){
+            $this->cache = null;
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function initialise(
+    ): void
+    {
+        SqlTableFactory::initialise($this->connectionFactory->getConfigurations());
+    }
+
+    /**
+     * @return void
+     */
+    public function destroy(
+    ): void
+    {
+        $this->connectionFactory->resetDatabases();
     }
 
     /**
@@ -47,253 +65,292 @@ class MySQL extends AbstractService implements DataInterface
     public static function getBaseInterface(
     ): ?string
     {
-        return DataInterface::class;
+        return SqlInterface::class;
     }
 
     /**
-     * @param CacheInterface $cache
-     */
-    public function setCacheInterface(CacheInterface $cache): void
-    {
-        $this->cache = $cache;
-    }
-
-    /**
-     * @param string $dbReader
-     * @return MySqlTableInterface
-     * @throws Exception
-     */
-    public function create(string $dbReader): MySqlTableInterface
-    {
-        if (array_key_exists($dbReader, $this->tableManagers)) {
-            return $this->tableManagers[$dbReader];
-        }
-
-        if (!class_exists($dbReader)) {
-            $this->logger?->error(
-                message: 'Database reader class missing: ' . $dbReader,
-                domain: 'mysql'
-            );
-            throw new RuntimeException('Database reader class missing', 500);
-        }
-
-        /** @var MySqlTableInterface $response */
-        $response = new $dbReader($this->connectionFactory, $this->logger);
-        $response->initialiseAttributes();
-
-        $databaseName = $response->getDbToUse();
-
-        $connection = $this->connectionFactory->getDatabase($databaseName);
-
-        $response->setConnection($connection);
-
-        $this->tableManagers[$dbReader] = $response;
-
-        return $response;
-    }
-
-    /**
-     *
-     */
-    public function destroy(): void
-    {
-        parent::destroy();
-        $this->connectionFactory->resetDatabases();
-        $this->tableManagers = [];
-    }
-
-    /**
-     * @param array $parameters
-     * @return array
-     */
-    private function flattenArray(array $parameters): array
-    {
-        $response = [];
-
-        foreach ($parameters ?? [] as $parameter) {
-            $response[] = $parameter;
-        }
-
-        return $response;
-    }
-
-    /**
-     * @param DataFunctionInterface $dataFunction
-     * @return array
-     * @throws Exception
-     */
-    public function readByDataFunction(
-        DataFunctionInterface $dataFunction,
-    ): array
-    {
-        return $this->read(
-            tableInterfaceClassName: $dataFunction->getClassName(),
-            functionName: $dataFunction->getFunctionName(),
-            parameters: $dataFunction->getParameters(),
-            cacheBuilder: $dataFunction->getCacheBuilder()
-        );
-    }
-
-    /**
-     * @param string $tableInterfaceClassName
-     * @param string $functionName
-     * @param array $parameters
+     * @template InstanceOfType
+     * @param SqlQueryFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @return array
+     * @param class-string<InstanceOfType>|null $responseType
+     * @param bool $requireObjectsList
+     * @param array $options
+     * @return InstanceOfType|array
+     * @throws MinimalismException
+     * @throws Throwable
+     */
+    public function create(
+        SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+        ?string $responseType=null,
+        bool $requireObjectsList=false,
+        array $options=[],
+    ): SqlDataObjectInterface|array
+    {
+        $response = $this->execute(
+            databaseOperationType: DatabaseOperationType::Create,
+            queryFactory: $queryFactory,
+            cacheBuilder: $cacheBuilder,
+            options: $options,
+        );
+
+        if ($responseType !== null){
+            if ($requireObjectsList){
+                $response = $this->returnObjectArray(
+                    recordset: $response,
+                    objectType: $responseType,
+                );
+            } else {
+                $response = $this->returnSingleObject(
+                    recordset: $response,
+                    objectType: $responseType,
+                );
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * @template InstanceOfType
+     * @param SqlQueryFactoryInterface $queryFactory
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @param class-string<InstanceOfType>|null $responseType
+     * @param bool $requireObjectsList
+     * @param array $options
+     * @return InstanceOfType|array
      * @throws Exception
      */
     public function read(
-        string $tableInterfaceClassName,
-        string $functionName,
-        array $parameters,
-        ?CacheBuilderInterface $cacheBuilder = null
-    ): array
+        SqlQueryFactoryInterface $queryFactory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+        ?string $responseType=null,
+        bool $requireObjectsList=false,
+        array $options=[],
+    ): SqlDataObjectInterface|array
     {
         $response = null;
-        if ($this->cache !== null
-            &&
-            $cacheBuilder !== null
-            &&
-            $this->cache->useCaching()
-        ) {
+        if ($this->cache !== null && $cacheBuilder !== null) {
             $response = $this->cache->readArray($cacheBuilder, CacheType::Data);
         }
 
         if ($response === null){
-            $tableInterface = $this->create($tableInterfaceClassName);
-            $parameters = $this->flattenArray($parameters);
-            $response = $tableInterface->{$functionName}(...$parameters);
+            $sqlCommand = new SqlCommand(
+                connectionFactory: $this->connectionFactory,
+                factory: $queryFactory,
+                options: $options,
+            );
+            try {
+                $response = $sqlCommand->execute(
+                    databaseOperationType: DatabaseOperationType::Read,
+                    queryFactory: $queryFactory,
+                );
+            } finally {
+                $sqlCommand = null;
+            }
 
-            if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
+            if ($this->cache !== null && $cacheBuilder !== null) {
                 $this->cache->saveArray($cacheBuilder, $response, CacheType::Data);
             }
         } elseif ($response !== [] && !array_key_exists(0, $response)){
             $response = [$response];
         }
 
+        if ($responseType !== null){
+            if ($requireObjectsList){
+                $response = $this->returnObjectArray(
+                    recordset: $response,
+                    objectType: $responseType,
+                );
+            } else {
+                $response = $this->returnSingleObject(
+                    recordset: $response,
+                    objectType: $responseType,
+                );
+            }
+        }
+
         return $response;
     }
 
     /**
-     * @param string $tableInterfaceClassName
-     * @param string $functionName
-     * @param array $parameters
-     * @return int
-     * @throws Exception
-     */
-    public function count(
-        string $tableInterfaceClassName,
-        string $functionName,
-        array $parameters
-    ): int
-    {
-        return $this->create($tableInterfaceClassName)->{$functionName}(...$parameters);
-    }
-
-    /**
-     * @param string $tableInterfaceClassName
-     * @param array $records
+     * @param SqlDataObjectInterface|SqlQueryFactoryInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @param bool $avoidSingleInsert
-     * @throws Exception
+     * @param array $options
+     * @return void
+     * @throws MinimalismException
+     * @throws Throwable
      */
     public function update(
-        string $tableInterfaceClassName,
-        array $records,
-        ?CacheBuilderInterface $cacheBuilder = null,
-        bool $avoidSingleInsert=false
+        SqlDataObjectInterface|SqlQueryFactoryInterface|array $queryFactory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+        array $options=[],
     ): void
     {
-        $tableInterface = $this->create($tableInterfaceClassName);
-        $tableInterface->update(
-            records: $records,
-            avoidSingleInsert: $avoidSingleInsert,
+        /** @noinspection UnusedFunctionResultInspection */
+        $this->execute(
+            databaseOperationType: DatabaseOperationType::Update,
+            queryFactory: $queryFactory,
+            cacheBuilder: $cacheBuilder,
+            options: $options,
         );
-
-        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
-            $this->cache->invalidate($cacheBuilder);
-        }
     }
 
     /**
-     * @param string $tableInterfaceClassName
-     * @param array $records
+     * @param SqlDataObjectInterface|SqlQueryFactoryInterface|array $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
-     * @throws Exception
+     * @param array $options
+     * @return void
+     * @throws MinimalismException
+     * @throws Throwable
      */
     public function delete(
-        string $tableInterfaceClassName,
-        array $records,
-        ?CacheBuilderInterface $cacheBuilder = null
+        SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
+        ?CacheBuilderInterface $cacheBuilder=null,
+        array $options=[],
     ): void
     {
-        $tableInterface = $this->create($tableInterfaceClassName);
-        $tableInterface->update($records, true);
-
-        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
-            $this->cache->invalidate($cacheBuilder);
-        }
-    }
-
-    /**
-     * @param string $tableInterfaceClassName
-     * @param array $records
-     * @param CacheBuilderInterface|null $cacheBuilder
-     * @param bool $avoidSingleInsert
-     * @return array
-     * @throws Exception
-     */
-    public function insert(
-        string $tableInterfaceClassName,
-        array $records,
-        ?CacheBuilderInterface $cacheBuilder = null,
-        bool $avoidSingleInsert=false
-    ): array
-    {
-        $tableInterface = $this->create($tableInterfaceClassName);
-        $tableInterface->update(
-            records: $records,
-            avoidSingleInsert: $avoidSingleInsert
+        /** @noinspection UnusedFunctionResultInspection */
+        $this->execute(
+            databaseOperationType: DatabaseOperationType::Delete,
+            queryFactory: $queryFactory,
+            cacheBuilder: $cacheBuilder,
+            options: $options,
         );
-
-        if ($this->cache !== null && $cacheBuilder !== null && $this->cache->useCaching()) {
-            $this->cache->invalidate($cacheBuilder);
-        }
-
-        return ($records);
     }
 
     /**
-     * @param string $tableInterfaceClassName
-     * @param string $functionName
-     * @param array $parameters
+     * @param DatabaseOperationType $databaseOperationType
+     * @param SqlQueryFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $queryFactory
+     * @param CacheBuilderInterface|null $cacheBuilder
+     * @param array $options
      * @return array|null
-     * @throws Exception
+     * @throws MinimalismException
+     * @throws Throwable
      */
-    public function run(
-        string $tableInterfaceClassName,
-        string $functionName,
-        array $parameters,
+    private function execute(
+        DatabaseOperationType $databaseOperationType,
+        SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
+        ?CacheBuilderInterface $cacheBuilder,
+        array $options=[],
     ): ?array
     {
-        $tableInterface = $this->create($tableInterfaceClassName);
-        $parameters = $this->flattenArray($parameters);
-        return $tableInterface->{$functionName}(...$parameters);
+        $response = null;
+        $sqlCommand = null;
+
+        try {
+            if (is_array($queryFactory)) {
+                $response = [];
+                $isFirstDataObjectInterface=true;
+                foreach ($queryFactory as $dataObjectInterface) {
+                    if ($isFirstDataObjectInterface) {
+                        $sqlCommand = new SqlCommand(
+                            connectionFactory: $this->connectionFactory,
+                            factory: $dataObjectInterface,
+                            options: $options,
+                        );
+                    }
+                    $isFirstDataObjectInterface=false;
+
+                    $singleResponse = $sqlCommand->execute($databaseOperationType, $dataObjectInterface);
+                    if ($singleResponse !== null){
+                        $response[] = $singleResponse;
+                    }
+                }
+            } else {
+                $sqlCommand = new SqlCommand(
+                    connectionFactory: $this->connectionFactory,
+                    factory: $queryFactory,
+                    options: $options,
+                );
+
+                $singleResponse = $sqlCommand->execute($databaseOperationType, $queryFactory);
+                if ($singleResponse !== null){
+                    $response[] = $singleResponse;
+                }
+            }
+
+            $sqlCommand?->commit();
+        } catch (Exception|Throwable $e) {
+            $sqlCommand?->rollback();
+            throw $e;
+        } finally {
+            $sqlCommand = null;
+        }
+
+        if ($this->cache !== null && $cacheBuilder !== null) {
+            $this->cache->invalidate($cacheBuilder);
+        }
+
+        return ($response);
     }
 
     /**
-     * @param string $tableInterfaceClassName
-     * @param string $sql
-     * @param array $parameters
-     * @return array|null
+     * @template InstanceOfType
+     * @param array $recordset
+     * @param class-string<InstanceOfType> $objectType
+     * @return InstanceOfType
      * @throws Exception
      */
-    public function runSQL(
-        string $tableInterfaceClassName,
-        string $sql,
-        array $parameters=[],
-    ): array|null{
+    private function returnSingleObject(
+        array $recordset,
+        string $objectType,
+    ): SqlDataObjectInterface
+    {
+        if ($recordset === [] || $recordset === [[]]){
+            throw new MinimalismException(
+                status: HttpCode::NotFound,
+                message: 'Record Not found',
+            );
+        }
 
-        return $this->create($tableInterfaceClassName)->runSQL($sql, $parameters);
+        if (array_is_list($recordset)){
+            $response = SqlDataObjectFactory::createObject(
+                objectFactory: $this->objectFactory,
+                objectClass: $objectType,
+                data: $recordset[0],
+            );
+        } else {
+            $response = SqlDataObjectFactory::createObject(
+                objectFactory: $this->objectFactory,
+                objectClass: $objectType,
+                data: $recordset,
+            );
+        }
+
+        return $response;
+    }
+
+    /**
+     * @template InstanceOfType
+     * @param array $recordset
+     * @param class-string<InstanceOfType> $objectType
+     * @return InstanceOfType[]
+     * @throws Exception
+     */
+    private function returnObjectArray(
+        array $recordset,
+        string $objectType,
+    ): array
+    {
+        $response = [];
+
+        if (array_is_list($recordset)) {
+            foreach ($recordset ?? [] as $record) {
+                $response[] = SqlDataObjectFactory::createObject(
+                    objectFactory: $this->objectFactory,
+                    objectClass: $objectType,
+                    data: $record,
+                );
+            }
+        } else {
+            $response[] = SqlDataObjectFactory::createObject(
+                objectFactory: $this->objectFactory,
+                objectClass: $objectType,
+                data: $recordset[0],
+            );
+        }
+
+        return $response;
     }
 }
