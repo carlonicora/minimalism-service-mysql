@@ -4,10 +4,10 @@ namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
-use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractSqlStatementCommand;
+use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractMyMySqlStatementCommand;
 use Exception;
 
-class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
+class MySqlUpdateStatementCommand extends AbstractMyMySqlStatementCommand
 {
     /**
      * @param SqlDataObjectInterface $object
@@ -23,7 +23,12 @@ class SqlDeleteStatementCommand extends AbstractSqlStatementCommand
         $data = SqlDataObjectFactory::createData(object: $object);
 
         /** @noinspection UnusedFunctionResultInspection */
-        $this->factory->delete();
+        $this->factory->update();
+
+        foreach ($this->factory->getTable()->getRegularFields() as $field){
+            /** @noinspection UnusedFunctionResultInspection */
+            $this->factory->addParameter($field->getIdentifier(), $data[$field->getName()]);
+        }
 
         foreach ($this->factory->getTable()->getPrimaryKeyFields() as $field){
             /** @noinspection UnusedFunctionResultInspection */

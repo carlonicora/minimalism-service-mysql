@@ -1,7 +1,7 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Enums;
 
-enum SqlOptions
+enum MySqlOptions
 {
     case DisableForeignKeyCheck;
 

@@ -2,12 +2,12 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
-use CarloNicora\Minimalism\Services\MySQL\Data\SqlTable;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use Exception;
 use mysqli;
 use Throwable;
 
-class ConnectionFactory
+class MySqlConnectionFactory
 {
     /** @var mysqli[] */
     private array $databases = [];
@@ -61,16 +61,16 @@ class ConnectionFactory
     }
 
     /**
-     * @param SqlTable $table
+     * @param SqlTableInterface $table
      * @return mysqli
      * @throws MinimalismException
      */
     public function create(
-        SqlTable $table,
+        SqlTableInterface $table,
     ): mysqli
     {
         if (!array_key_exists($table->getDatabaseIdentifier(), $this->databaseConnectionStrings)){
-            throw ExceptionFactory::DatabaseConnectionStringMissing->create($table->getDatabaseIdentifier());
+            throw MySqlExceptionFactory::DatabaseConnectionStringMissing->create($table->getDatabaseIdentifier());
         }
 
         $dbConf = $this->databaseConnectionStrings[$table->getDatabaseIdentifier()];
@@ -78,7 +78,7 @@ class ConnectionFactory
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
         if ($response->connect_errno) {
-            throw ExceptionFactory::ErrorConnectingToTheDatabase->create($dbConf['name']);
+            throw MySqlExceptionFactory::ErrorConnectingToTheDatabase->create($dbConf['name']);
         }
 
         $response->set_charset('utf8mb4');

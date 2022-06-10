@@ -6,7 +6,7 @@ use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlJoinType;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use UnitEnum;
 
-class SqlJoinFactory implements SqlJoinFactoryInterface
+class MySqlJoinFactory implements SqlJoinFactoryInterface
 {
     /**
      * @param UnitEnum $primaryKey
@@ -28,8 +28,8 @@ class SqlJoinFactory implements SqlJoinFactoryInterface
     public function getSql(
     ): string
     {
-        $primaryTable = SqlTableFactory::create(get_class($this->primaryKey));
-        $foreignTable = SqlTableFactory::create(get_class($this->foreignKey));
+        $primaryTable = MySqlTableFactory::create(get_class($this->primaryKey));
+        $foreignTable = MySqlTableFactory::create(get_class($this->foreignKey));
 
 
         return ($this->joinType !== null ? $this->joinType->value . ' JOIN' : 'JOIN')

@@ -4,28 +4,28 @@ namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
-use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
-use CarloNicora\Minimalism\Services\MySQL\Enums\SqlOptions;
-use CarloNicora\Minimalism\Services\MySQL\Factories\ExceptionFactory;
-use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlDatabaseOperationType;
+use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlOptions;
+use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlExceptionFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlConnectionFactory;
 use Exception;
 use mysqli;
 
-class SqlCommand
+class MySqlCommand
 {
     /** @var mysqli  */
     private mysqli $connection;
 
     /**
-     * @param ConnectionFactory $connectionFactory
+     * @param MySqlConnectionFactory $connectionFactory
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface $factory
-     * @param SqlOptions[] $options
+     * @param MySqlOptions[] $options
      * @throws MinimalismException
      */
     public function __construct(
-        ConnectionFactory $connectionFactory,
+        MySqlConnectionFactory                          $connectionFactory,
         SqlQueryFactoryInterface|SqlDataObjectInterface $factory,
-        private readonly array $options,
+        private readonly array                          $options,
     )
     {
         $this->connection = $connectionFactory->create($factory->getTable());
@@ -57,14 +57,14 @@ class SqlCommand
     }
 
     /**
-     * @param DatabaseOperationType $databaseOperationType
+     * @param MySqlDatabaseOperationType $databaseOperationType
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface $queryFactory
      * @param int $retry
      * @return array|null
      * @throws MinimalismException|Exception
      */
     public function execute(
-        DatabaseOperationType                           $databaseOperationType,
+        MySqlDatabaseOperationType                      $databaseOperationType,
         SqlQueryFactoryInterface|SqlDataObjectInterface $queryFactory,
         int                                             $retry=0,
     ): ?array
@@ -86,7 +86,7 @@ class SqlCommand
         $statement = $this->connection->prepare($sql);
 
         if ($statement === false) {
-            throw ExceptionFactory::MySQLStatementPreparationFailed->create($sql . '(' . $this->connection->error . ')');
+            throw MySqlExceptionFactory::MySQLStatementPreparationFailed->create($sql . '(' . $this->connection->error . ')');
         }
 
         if (!empty($parameters)) {
@@ -100,11 +100,11 @@ class SqlCommand
                 /** @noinspection UnusedFunctionResultInspection */
                 $this->execute($databaseOperationType, $queryFactory, $retry);
             } else {
-                throw ExceptionFactory::MySQLStatementExecutionFailed->create($sql . '(' . $statement->error. ')');
+                throw MySqlExceptionFactory::MySQLStatementExecutionFailed->create($sql . '(' . $statement->error. ')');
             }
         }
 
-        if ($databaseOperationType === DatabaseOperationType::Read) {
+        if ($databaseOperationType === MySqlDatabaseOperationType::Read) {
             $results = $statement->get_result();
 
             $response = [];
@@ -114,7 +114,7 @@ class SqlCommand
                     $response[] = $record;
                 }
             }
-        } elseif ($databaseOperationType === DatabaseOperationType::Create) {
+        } elseif ($databaseOperationType === MySqlDatabaseOperationType::Create) {
             $response = $sqlFactory->getInsertedArray();
 
             if ($sqlFactory->getTable()->getAutoIncrementField() !== null){
@@ -125,7 +125,7 @@ class SqlCommand
         }
 
         if (false === $statement->close()) {
-            throw ExceptionFactory::MySQLCloseFailed->create($statement->error);
+            throw MySqlExceptionFactory::MySQLCloseFailed->create($statement->error);
         }
 
         $this->runOptions(on: false);

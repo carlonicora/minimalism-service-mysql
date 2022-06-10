@@ -3,12 +3,14 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Attributes\SqlTableAttribute;
+use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
-use CarloNicora\Minimalism\Services\MySQL\Data\SqlTable;
+use CarloNicora\Minimalism\Services\MySQL\Data\MySqlTable;
 use ReflectionClass;
 use ReflectionException;
 
-class SqlTableFactory
+class MySqlTableFactory implements SqlTableFactoryInterface
 {
     /** @var array  */
     private static array $dbNames=[];
@@ -57,8 +59,10 @@ class SqlTableFactory
     ): SqlTableInterface
     {
         try {
-            /** @var SqlTable $response */
-            $response = (new ReflectionClass($tableClass))->getAttributes(SqlTable::class)[0]->newInstance();
+            /** @var MySqlTable $response */
+            $parameters = (new ReflectionClass($tableClass))->getAttributes(SqlTableAttribute::class)[0]->getArguments();
+            $response = new MySqlTable(...$parameters);
+            //$response = (new ReflectionClass($tableClass))->getAttributes(MySqlTable::class)[0]->newInstance();
 
             if ($overrideDatabaseIdentifier !== null){
                 $response->setDatabaseIdentifier($overrideDatabaseIdentifier);

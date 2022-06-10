@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Interfaces;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 
-interface SqlStatementCommandInterface
+interface MySqlStatementCommandInterface
 {
     /**
      * @param SqlDataObjectInterface $object

@@ -7,21 +7,27 @@ use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
+use CarloNicora\Minimalism\Interfaces\Sql\Abstracts\AbstractSqlFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlJoinFactory;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlQueryFactory;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlTableFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
-use CarloNicora\Minimalism\Services\MySQL\Commands\SqlCommand;
-use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
-use CarloNicora\Minimalism\Services\MySQL\Factories\SqlTableFactory;
+use CarloNicora\Minimalism\Services\MySQL\Commands\MySqlCommand;
+use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlDatabaseOperationType;
+use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlJoinFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlQueryFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlTableFactory;
 use Exception;
-use CarloNicora\Minimalism\Services\MySQL\Factories\ConnectionFactory;
+use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlConnectionFactory;
 use Throwable;
 
 class MySQL extends AbstractService implements SqlInterface
 {
-    /** @var ConnectionFactory  */
-    private ConnectionFactory $connectionFactory;
+    /** @var MySqlConnectionFactory  */
+    private MySqlConnectionFactory $connectionFactory;
 
     /**
      * @param string $MINIMALISM_SERVICE_MYSQL
@@ -32,7 +38,7 @@ class MySQL extends AbstractService implements SqlInterface
         private ?CacheInterface $cache=null,
     )
     {
-        $this->connectionFactory = new ConnectionFactory(
+        $this->connectionFactory = new MySqlConnectionFactory(
             databaseConfigurations: $MINIMALISM_SERVICE_MYSQL,
         );
 
@@ -47,7 +53,8 @@ class MySQL extends AbstractService implements SqlInterface
     public function initialise(
     ): void
     {
-        SqlTableFactory::initialise($this->connectionFactory->getConfigurations());
+        AbstractSqlFactory::setSqlInterface($this);
+        MySqlTableFactory::initialise($this->connectionFactory->getConfigurations());
     }
 
     /**
@@ -88,7 +95,7 @@ class MySQL extends AbstractService implements SqlInterface
     ): SqlDataObjectInterface|array
     {
         $response = $this->execute(
-            databaseOperationType: DatabaseOperationType::Create,
+            databaseOperationType: MySqlDatabaseOperationType::Create,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
             options: $options,
@@ -135,14 +142,14 @@ class MySQL extends AbstractService implements SqlInterface
         }
 
         if ($response === null){
-            $sqlCommand = new SqlCommand(
+            $sqlCommand = new MySqlCommand(
                 connectionFactory: $this->connectionFactory,
                 factory: $queryFactory,
                 options: $options,
             );
             try {
                 $response = $sqlCommand->execute(
-                    databaseOperationType: DatabaseOperationType::Read,
+                    databaseOperationType: MySqlDatabaseOperationType::Read,
                     queryFactory: $queryFactory,
                 );
             } finally {
@@ -189,7 +196,7 @@ class MySQL extends AbstractService implements SqlInterface
     {
         /** @noinspection UnusedFunctionResultInspection */
         $this->execute(
-            databaseOperationType: DatabaseOperationType::Update,
+            databaseOperationType: MySqlDatabaseOperationType::Update,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
             options: $options,
@@ -212,7 +219,7 @@ class MySQL extends AbstractService implements SqlInterface
     {
         /** @noinspection UnusedFunctionResultInspection */
         $this->execute(
-            databaseOperationType: DatabaseOperationType::Delete,
+            databaseOperationType: MySqlDatabaseOperationType::Delete,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
             options: $options,
@@ -220,7 +227,7 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
-     * @param DatabaseOperationType $databaseOperationType
+     * @param MySqlDatabaseOperationType $databaseOperationType
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param array $options
@@ -229,10 +236,10 @@ class MySQL extends AbstractService implements SqlInterface
      * @throws Throwable
      */
     private function execute(
-        DatabaseOperationType $databaseOperationType,
+        MySqlDatabaseOperationType                            $databaseOperationType,
         SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
-        ?CacheBuilderInterface $cacheBuilder,
-        array $options=[],
+        ?CacheBuilderInterface                                $cacheBuilder,
+        array                                                 $options=[],
     ): ?array
     {
         $response = null;
@@ -244,7 +251,7 @@ class MySQL extends AbstractService implements SqlInterface
                 $isFirstDataObjectInterface=true;
                 foreach ($queryFactory as $dataObjectInterface) {
                     if ($isFirstDataObjectInterface) {
-                        $sqlCommand = new SqlCommand(
+                        $sqlCommand = new MySqlCommand(
                             connectionFactory: $this->connectionFactory,
                             factory: $dataObjectInterface,
                             options: $options,
@@ -258,7 +265,7 @@ class MySQL extends AbstractService implements SqlInterface
                     }
                 }
             } else {
-                $sqlCommand = new SqlCommand(
+                $sqlCommand = new MySqlCommand(
                     connectionFactory: $this->connectionFactory,
                     factory: $queryFactory,
                     options: $options,
@@ -306,13 +313,11 @@ class MySQL extends AbstractService implements SqlInterface
 
         if (array_is_list($recordset)){
             $response = SqlDataObjectFactory::createObject(
-                objectFactory: $this->objectFactory,
                 objectClass: $objectType,
                 data: $recordset[0],
             );
         } else {
             $response = SqlDataObjectFactory::createObject(
-                objectFactory: $this->objectFactory,
                 objectClass: $objectType,
                 data: $recordset,
             );
@@ -338,19 +343,32 @@ class MySQL extends AbstractService implements SqlInterface
         if (array_is_list($recordset)) {
             foreach ($recordset ?? [] as $record) {
                 $response[] = SqlDataObjectFactory::createObject(
-                    objectFactory: $this->objectFactory,
                     objectClass: $objectType,
                     data: $record,
                 );
             }
         } else {
             $response[] = SqlDataObjectFactory::createObject(
-                objectFactory: $this->objectFactory,
                 objectClass: $objectType,
                 data: $recordset[0],
             );
         }
 
         return $response;
+    }
+
+    /**
+     * @param string $baseFactory
+     * @return mixed
+     */
+    public function getFactory(
+        string $baseFactory,
+    ): string
+    {
+        return match ($baseFactory){
+            SqlTableFactory::class => MySqlTableFactory::class,
+            SqlQueryFactory::class => MySqlQueryFactory::class,
+            SqlJoinFactory::class => MySqlJoinFactory::class,
+        };
     }
 }

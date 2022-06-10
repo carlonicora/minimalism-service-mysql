@@ -4,10 +4,10 @@ namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
-use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractSqlStatementCommand;
+use CarloNicora\Minimalism\Services\MySQL\Abstracts\AbstractMyMySqlStatementCommand;
 use Exception;
 
-class SqlCreateStatementCommand extends AbstractSqlStatementCommand
+class MySqlCreateStatementCommand extends AbstractMyMySqlStatementCommand
 {
     /**
      * @param SqlDataObjectInterface $object

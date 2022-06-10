@@ -4,24 +4,24 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 use BackedEnum;
 use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Data\SqlComparisonObject;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlFieldType;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
-use CarloNicora\Minimalism\Services\MySQL\Data\SqlComparisonObject;
-use CarloNicora\Minimalism\Services\MySQL\Data\SqlTable;
-use CarloNicora\Minimalism\Services\MySQL\Enums\DatabaseOperationType;
-use CarloNicora\Minimalism\Services\MySQL\Enums\FieldType;
+use CarloNicora\Minimalism\Services\MySQL\Data\MySqlTable;
+use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlDatabaseOperationType;
 use UnitEnum;
 
-class SqlQueryFactory implements SqlQueryFactoryInterface
+class MySqlQueryFactory implements SqlQueryFactoryInterface
 {
-    /** @var DatabaseOperationType  */
-    private DatabaseOperationType $databaseOperationType;
+    /** @var MySqlDatabaseOperationType  */
+    private MySqlDatabaseOperationType $databaseOperationType;
 
-    /** @var SqlTableInterface|SqlTable  */
-    private SqlTableInterface|SqlTable $table;
+    /** @var SqlTableInterface|MySqlTable  */
+    private SqlTableInterface|MySqlTable $table;
 
     /** @var string|null  */
     private ?string $sql=null;
@@ -35,7 +35,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     /** @var string  */
     private string $from;
 
-    /** @var SqlJoinFactory[] */
+    /** @var MySqlJoinFactory[] */
     private array $join=[];
 
     /** @var SqlComparisonObject[]  */
@@ -66,7 +66,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         ?string $overrideDatabaseIdentifier=null,
     )
     {
-        $this->table = SqlTableFactory::create($this->tableClass, $overrideDatabaseIdentifier);
+        $this->table = MySqlTableFactory::create($this->tableClass, $overrideDatabaseIdentifier);
     }
 
     /**
@@ -89,7 +89,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function selectAll(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = DatabaseOperationType::Read;
+        $this->databaseOperationType = MySqlDatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
         $this->from = 'FROM ' . $this->table->getFullName();
 
@@ -105,7 +105,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         array $fields,
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = DatabaseOperationType::Read;
+        $this->databaseOperationType = MySqlDatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT ';
 
         foreach ($fields as $field){
@@ -129,7 +129,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function delete(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = DatabaseOperationType::Delete;
+        $this->databaseOperationType = MySqlDatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
         $this->from = 'FROM ' . $this->table->getFullName();
 
@@ -142,7 +142,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function update(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = DatabaseOperationType::Update;
+        $this->databaseOperationType = MySqlDatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
         $this->from = $this->table->getFullName();
 
@@ -155,7 +155,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function insert(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = DatabaseOperationType::Create;
+        $this->databaseOperationType = MySqlDatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT' . ($this->table->isInsertIgnore() ? ' IGNORE' : '') . ' INTO';
         $this->from = $this->table->getFullName();
 
@@ -218,7 +218,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
      * @param UnitEnum|string $field
      * @param mixed $value
      * @param SqlComparison|null $comparison
-     * @param FieldType|null $stringParameterType
+     * @param SqlFieldType|null $stringParameterType
      * @param bool $isHaving
      * @throws MinimalismException
      */
@@ -226,7 +226,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         UnitEnum|string $field,
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
-        ?UnitEnum $stringParameterType=null,
+        ?SqlFieldType $stringParameterType=null,
         bool $isHaving=false,
     ): void
     {
@@ -237,10 +237,10 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         if (is_string($field)){
             $sqlField = $field;
             $this->parameters[0] .= match($stringParameterType) {
-                FieldType::Integer => 'i',
-                FieldType::Double => 'd',
-                FieldType::Blob => 'b',
-                FieldType::String => 's',
+                SqlFieldType::Integer => 'i',
+                SqlFieldType::Double => 'd',
+                SqlFieldType::Blob => 'b',
+                SqlFieldType::String => 's',
             };
         } else {
             $sqlField = self::create(get_class($field))->getTable()->getFieldByName($field->name);
@@ -259,7 +259,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
      * @param UnitEnum|string $field
      * @param mixed $value
      * @param SqlComparison|null $comparison
-     * @param FieldType|null $stringParameterType
+     * @param SqlFieldType|null $stringParameterType
      * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
@@ -267,7 +267,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         UnitEnum|string $field,
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
-        ?UnitEnum $stringParameterType=null,
+        ?SqlFieldType $stringParameterType=null,
     ): SqlQueryFactoryInterface
     {
         $this->addParam(
@@ -284,7 +284,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
      * @param UnitEnum|string $field
      * @param mixed $value
      * @param SqlComparison|null $comparison
-     * @param FieldType|null $stringParameterType
+     * @param SqlFieldType|null $stringParameterType
      * @return SqlQueryFactoryInterface
      * @throws MinimalismException
      */
@@ -292,7 +292,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
         UnitEnum|string $field,
         mixed $value,
         ?SqlComparison $comparison=SqlComparison::Equal,
-        ?UnitEnum $stringParameterType=null,
+        ?SqlFieldType $stringParameterType=null,
     ): SqlQueryFactoryInterface
     {
         $this->addParam(
@@ -346,7 +346,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function getInsertedArray(
     ): array
     {
-        if ($this->databaseOperationType !== DatabaseOperationType::Create) {
+        if ($this->databaseOperationType !== MySqlDatabaseOperationType::Create) {
             throw new MinimalismException(HttpCode::InternalServerError, 'Get Inserted Array requested for non-creation query');
         }
 
@@ -374,13 +374,13 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
 
         $response = $this->operandAndFields . ' '. $this->from;
 
-        if ($this->databaseOperationType === DatabaseOperationType::Read) {
+        if ($this->databaseOperationType === MySqlDatabaseOperationType::Read) {
             foreach ($this->join as $join) {
                 $response .= ' ' . $join->getSql();
             }
         }
 
-        if ($this->databaseOperationType === DatabaseOperationType::Create){
+        if ($this->databaseOperationType === MySqlDatabaseOperationType::Create){
             if (empty($this->where)) {
                 $response .= ' VALUES ()';
             } else {
@@ -397,14 +397,14 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
 
                 $response .= ') VALUES (' . $additionalSql . ')';
             }
-        } elseif  ($this->databaseOperationType === DatabaseOperationType::Update) {
+        } elseif  ($this->databaseOperationType === MySqlDatabaseOperationType::Update) {
             $response .= ' SET ';
 
             $response .= $this->generateWhereStatement(isUpdate: true);
         } else {
             $response .= $this->generateWhereStatement();
 
-            if ($this->databaseOperationType === DatabaseOperationType::Read) {
+            if ($this->databaseOperationType === MySqlDatabaseOperationType::Read) {
                 $isFirstGroupBy = true;
                 foreach ($this->groupBy as $field) {
                     $response .= ' ' . ($isFirstGroupBy ? 'GROUP BY ' : ',') . self::create(get_class($field))->getTable()->getField($field)->getFullName();
@@ -421,7 +421,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
             }
         }
 
-        if ($this->databaseOperationType === DatabaseOperationType::Read && $this->start !== null && $this->length !== null) {
+        if ($this->databaseOperationType === MySqlDatabaseOperationType::Read && $this->start !== null && $this->length !== null) {
             $response .= ' LIMIT ' . $this->start . ',' . $this->length;
         }
 
@@ -436,7 +436,7 @@ class SqlQueryFactory implements SqlQueryFactoryInterface
     public function getParameters(
     ): array
     {
-        if ($this->databaseOperationType === DatabaseOperationType::Update){
+        if ($this->databaseOperationType === MySqlDatabaseOperationType::Update){
             $primaryKeyIds = '';
             $primaryKeys = [];
             $nonKeyIds = '';

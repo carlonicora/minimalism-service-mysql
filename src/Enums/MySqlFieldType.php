@@ -1,7 +1,9 @@
 <?php
 namespace CarloNicora\Minimalism\Services\MySQL\Enums;
 
-enum SqlFieldType: string
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlFieldType;
+
+enum MySqlFieldType: string
 {
     case bigint = 'bigint';
     case blob = 'blob';
@@ -60,16 +62,16 @@ enum SqlFieldType: string
     }
 
     /**
-     * @return FieldType
+     * @return SqlFieldType
      */
     public function getFieldType(
-    ): FieldType
+    ): SqlFieldType
     {
         return match($this){
-            self::float, self::double, self::decimal => FieldType::Double,
-            self::bigint, self::int, self::mediumint, self::smallint, self::tinyint => FieldType::Integer,
-            self::blob, self::longblob, self::mediumblob, self::tinyblob => FieldType::Blob,
-            default => FieldType::String,
+            self::float, self::double, self::decimal => SqlFieldType::Double,
+            self::bigint, self::int, self::mediumint, self::smallint, self::tinyint => SqlFieldType::Integer,
+            self::blob, self::longblob, self::mediumblob, self::tinyblob => SqlFieldType::Blob,
+            default => SqlFieldType::String,
         };
     }
 }

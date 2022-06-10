@@ -4,7 +4,7 @@ namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 
-enum ExceptionFactory: int
+enum MySqlExceptionFactory: int
 {
     /** @var int */
     private const exceptionId=100110000;
