@@ -8,6 +8,7 @@ use CarloNicora\Minimalism\Interfaces\Cache\Enums\CacheType;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheBuilderInterface;
 use CarloNicora\Minimalism\Interfaces\Cache\Interfaces\CacheInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Abstracts\AbstractSqlFactory;
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlDatabaseOperationType;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlDataObjectFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlJoinFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlQueryFactory;
@@ -16,7 +17,6 @@ use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlInterface;
 use CarloNicora\Minimalism\Services\MySQL\Commands\MySqlCommand;
-use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlDatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlJoinFactory;
 use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlQueryFactory;
 use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlTableFactory;
@@ -95,7 +95,7 @@ class MySQL extends AbstractService implements SqlInterface
     ): SqlDataObjectInterface|array
     {
         $response = $this->execute(
-            databaseOperationType: MySqlDatabaseOperationType::Create,
+            databaseOperationType: SqlDatabaseOperationType::Create,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
             options: $options,
@@ -149,7 +149,7 @@ class MySQL extends AbstractService implements SqlInterface
             );
             try {
                 $response = $sqlCommand->execute(
-                    databaseOperationType: MySqlDatabaseOperationType::Read,
+                    databaseOperationType: SqlDatabaseOperationType::Read,
                     queryFactory: $queryFactory,
                 );
             } finally {
@@ -196,7 +196,7 @@ class MySQL extends AbstractService implements SqlInterface
     {
         /** @noinspection UnusedFunctionResultInspection */
         $this->execute(
-            databaseOperationType: MySqlDatabaseOperationType::Update,
+            databaseOperationType: SqlDatabaseOperationType::Update,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
             options: $options,
@@ -219,7 +219,7 @@ class MySQL extends AbstractService implements SqlInterface
     {
         /** @noinspection UnusedFunctionResultInspection */
         $this->execute(
-            databaseOperationType: MySqlDatabaseOperationType::Delete,
+            databaseOperationType: SqlDatabaseOperationType::Delete,
             queryFactory: $queryFactory,
             cacheBuilder: $cacheBuilder,
             options: $options,
@@ -227,7 +227,7 @@ class MySQL extends AbstractService implements SqlInterface
     }
 
     /**
-     * @param MySqlDatabaseOperationType $databaseOperationType
+     * @param SqlDatabaseOperationType $databaseOperationType
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface|SqlDataObjectInterface[] $queryFactory
      * @param CacheBuilderInterface|null $cacheBuilder
      * @param array $options
@@ -236,7 +236,7 @@ class MySQL extends AbstractService implements SqlInterface
      * @throws Throwable
      */
     private function execute(
-        MySqlDatabaseOperationType                            $databaseOperationType,
+        SqlDatabaseOperationType                            $databaseOperationType,
         SqlQueryFactoryInterface|SqlDataObjectInterface|array $queryFactory,
         ?CacheBuilderInterface                                $cacheBuilder,
         array                                                 $options=[],

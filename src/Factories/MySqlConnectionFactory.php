@@ -2,6 +2,7 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Factories;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlExceptionFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use Exception;
 use mysqli;
@@ -70,7 +71,7 @@ class MySqlConnectionFactory
     ): mysqli
     {
         if (!array_key_exists($table->getDatabaseIdentifier(), $this->databaseConnectionStrings)){
-            throw MySqlExceptionFactory::DatabaseConnectionStringMissing->create($table->getDatabaseIdentifier());
+            throw SqlExceptionFactory::DatabaseConnectionStringMissing->create($table->getDatabaseIdentifier());
         }
 
         $dbConf = $this->databaseConnectionStrings[$table->getDatabaseIdentifier()];
@@ -78,7 +79,7 @@ class MySqlConnectionFactory
         $response = new mysqli($dbConf['host'], $dbConf['username'], $dbConf['password'], $dbConf['dbName'], $dbConf['port']);
 
         if ($response->connect_errno) {
-            throw MySqlExceptionFactory::ErrorConnectingToTheDatabase->create($dbConf['name']);
+            throw SqlExceptionFactory::ErrorConnectingToTheDatabase->create($dbConf['name']);
         }
 
         $response->set_charset('utf8mb4');

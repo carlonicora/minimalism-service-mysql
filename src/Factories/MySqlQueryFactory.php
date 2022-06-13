@@ -6,19 +6,19 @@ use CarloNicora\Minimalism\Enums\HttpCode;
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Data\SqlComparisonObject;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlDatabaseOperationType;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlFieldType;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlTableInterface;
 use CarloNicora\Minimalism\Services\MySQL\Data\MySqlTable;
-use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlDatabaseOperationType;
 use UnitEnum;
 
 class MySqlQueryFactory implements SqlQueryFactoryInterface
 {
-    /** @var MySqlDatabaseOperationType  */
-    private MySqlDatabaseOperationType $databaseOperationType;
+    /** @var SqlDatabaseOperationType  */
+    private SqlDatabaseOperationType $databaseOperationType;
 
     /** @var SqlTableInterface|MySqlTable  */
     private SqlTableInterface|MySqlTable $table;
@@ -89,7 +89,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     public function selectAll(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = MySqlDatabaseOperationType::Read;
+        $this->databaseOperationType = SqlDatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT *';
         $this->from = 'FROM ' . $this->table->getFullName();
 
@@ -105,7 +105,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
         array $fields,
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = MySqlDatabaseOperationType::Read;
+        $this->databaseOperationType = SqlDatabaseOperationType::Read;
         $this->operandAndFields = 'SELECT ';
 
         foreach ($fields as $field){
@@ -129,7 +129,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     public function delete(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = MySqlDatabaseOperationType::Delete;
+        $this->databaseOperationType = SqlDatabaseOperationType::Delete;
         $this->operandAndFields = 'DELETE';
         $this->from = 'FROM ' . $this->table->getFullName();
 
@@ -142,7 +142,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     public function update(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = MySqlDatabaseOperationType::Update;
+        $this->databaseOperationType = SqlDatabaseOperationType::Update;
         $this->operandAndFields = 'UPDATE';
         $this->from = $this->table->getFullName();
 
@@ -155,7 +155,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     public function insert(
     ): SqlQueryFactoryInterface
     {
-        $this->databaseOperationType = MySqlDatabaseOperationType::Create;
+        $this->databaseOperationType = SqlDatabaseOperationType::Create;
         $this->operandAndFields = 'INSERT' . ($this->table->isInsertIgnore() ? ' IGNORE' : '') . ' INTO';
         $this->from = $this->table->getFullName();
 
@@ -346,7 +346,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     public function getInsertedArray(
     ): array
     {
-        if ($this->databaseOperationType !== MySqlDatabaseOperationType::Create) {
+        if ($this->databaseOperationType !== SqlDatabaseOperationType::Create) {
             throw new MinimalismException(HttpCode::InternalServerError, 'Get Inserted Array requested for non-creation query');
         }
 
@@ -374,13 +374,13 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
 
         $response = $this->operandAndFields . ' '. $this->from;
 
-        if ($this->databaseOperationType === MySqlDatabaseOperationType::Read) {
+        if ($this->databaseOperationType === SqlDatabaseOperationType::Read) {
             foreach ($this->join as $join) {
                 $response .= ' ' . $join->getSql();
             }
         }
 
-        if ($this->databaseOperationType === MySqlDatabaseOperationType::Create){
+        if ($this->databaseOperationType === SqlDatabaseOperationType::Create){
             if (empty($this->where)) {
                 $response .= ' VALUES ()';
             } else {
@@ -397,14 +397,14 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
 
                 $response .= ') VALUES (' . $additionalSql . ')';
             }
-        } elseif  ($this->databaseOperationType === MySqlDatabaseOperationType::Update) {
+        } elseif  ($this->databaseOperationType === SqlDatabaseOperationType::Update) {
             $response .= ' SET ';
 
             $response .= $this->generateWhereStatement(isUpdate: true);
         } else {
             $response .= $this->generateWhereStatement();
 
-            if ($this->databaseOperationType === MySqlDatabaseOperationType::Read) {
+            if ($this->databaseOperationType === SqlDatabaseOperationType::Read) {
                 $isFirstGroupBy = true;
                 foreach ($this->groupBy as $field) {
                     $response .= ' ' . ($isFirstGroupBy ? 'GROUP BY ' : ',') . self::create(get_class($field))->getTable()->getField($field)->getFullName();
@@ -421,7 +421,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
             }
         }
 
-        if ($this->databaseOperationType === MySqlDatabaseOperationType::Read && $this->start !== null && $this->length !== null) {
+        if ($this->databaseOperationType === SqlDatabaseOperationType::Read && $this->start !== null && $this->length !== null) {
             $response .= ' LIMIT ' . $this->start . ',' . $this->length;
         }
 
@@ -436,7 +436,7 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     public function getParameters(
     ): array
     {
-        if ($this->databaseOperationType === MySqlDatabaseOperationType::Update){
+        if ($this->databaseOperationType === SqlDatabaseOperationType::Update){
             $primaryKeyIds = '';
             $primaryKeys = [];
             $nonKeyIds = '';

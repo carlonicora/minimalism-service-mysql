@@ -2,11 +2,11 @@
 namespace CarloNicora\Minimalism\Services\MySQL\Commands;
 
 use CarloNicora\Minimalism\Exceptions\MinimalismException;
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlDatabaseOperationType;
+use CarloNicora\Minimalism\Interfaces\Sql\Factories\SqlExceptionFactory;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlDataObjectInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlQueryFactoryInterface;
-use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlDatabaseOperationType;
 use CarloNicora\Minimalism\Services\MySQL\Enums\MySqlOptions;
-use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlExceptionFactory;
 use CarloNicora\Minimalism\Services\MySQL\Factories\MySqlConnectionFactory;
 use Exception;
 use mysqli;
@@ -57,16 +57,16 @@ class MySqlCommand
     }
 
     /**
-     * @param MySqlDatabaseOperationType $databaseOperationType
+     * @param SqlDatabaseOperationType $databaseOperationType
      * @param SqlQueryFactoryInterface|SqlDataObjectInterface $queryFactory
      * @param int $retry
      * @return array|null
      * @throws MinimalismException|Exception
      */
     public function execute(
-        MySqlDatabaseOperationType                      $databaseOperationType,
+        SqlDatabaseOperationType $databaseOperationType,
         SqlQueryFactoryInterface|SqlDataObjectInterface $queryFactory,
-        int                                             $retry=0,
+        int $retry=0,
     ): ?array
     {
         $response = null;
@@ -86,7 +86,7 @@ class MySqlCommand
         $statement = $this->connection->prepare($sql);
 
         if ($statement === false) {
-            throw MySqlExceptionFactory::MySQLStatementPreparationFailed->create($sql . '(' . $this->connection->error . ')');
+            throw SqlExceptionFactory::SqlStatementPreparationFailed->create($sql . '(' . $this->connection->error . ')');
         }
 
         if (!empty($parameters)) {
@@ -100,11 +100,11 @@ class MySqlCommand
                 /** @noinspection UnusedFunctionResultInspection */
                 $this->execute($databaseOperationType, $queryFactory, $retry);
             } else {
-                throw MySqlExceptionFactory::MySQLStatementExecutionFailed->create($sql . '(' . $statement->error. ')');
+                throw SqlExceptionFactory::SqlStatementExecutionFailed->create($sql . '(' . $statement->error. ')');
             }
         }
 
-        if ($databaseOperationType === MySqlDatabaseOperationType::Read) {
+        if ($databaseOperationType === SqlDatabaseOperationType::Read) {
             $results = $statement->get_result();
 
             $response = [];
@@ -114,7 +114,7 @@ class MySqlCommand
                     $response[] = $record;
                 }
             }
-        } elseif ($databaseOperationType === MySqlDatabaseOperationType::Create) {
+        } elseif ($databaseOperationType === SqlDatabaseOperationType::Create) {
             $response = $sqlFactory->getInsertedArray();
 
             if ($sqlFactory->getTable()->getAutoIncrementField() !== null){
@@ -125,7 +125,7 @@ class MySqlCommand
         }
 
         if (false === $statement->close()) {
-            throw MySqlExceptionFactory::MySQLCloseFailed->create($statement->error);
+            throw SqlExceptionFactory::SqlCloseFailed->create($statement->error);
         }
 
         $this->runOptions(on: false);
