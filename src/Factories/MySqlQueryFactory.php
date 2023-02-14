@@ -86,6 +86,18 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
     /**
      * @return SqlQueryFactoryInterface
      */
+    public function distinct(
+    ): SqlQueryFactoryInterface {
+        if (!str_contains($this->operandAndFields, 'DISTINCT')){
+            $this->operandAndFields = str_replace('SELECT ', 'SELECT DISTINCT ', $this->operandAndFields);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return SqlQueryFactoryInterface
+     */
     public function selectAll(
     ): SqlQueryFactoryInterface
     {
