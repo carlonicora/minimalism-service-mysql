@@ -341,7 +341,7 @@ class MySQL extends AbstractService implements SqlInterface
         $response = [];
 
         if (array_is_list($recordset)) {
-            foreach ($recordset ?? [] as $record) {
+            foreach ($recordset as $record) {
                 $response[] = SqlDataObjectFactory::createObject(
                     objectClass: $objectType,
                     data: $record,

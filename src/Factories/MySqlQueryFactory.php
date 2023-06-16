@@ -7,6 +7,7 @@ use CarloNicora\Minimalism\Exceptions\MinimalismException;
 use CarloNicora\Minimalism\Interfaces\Sql\Data\SqlComparisonObject;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlComparison;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlDatabaseOperationType;
+use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlFieldOption;
 use CarloNicora\Minimalism\Interfaces\Sql\Enums\SqlFieldType;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlJoinFactoryInterface;
 use CarloNicora\Minimalism\Interfaces\Sql\Interfaces\SqlOrderByInterface;
@@ -460,7 +461,11 @@ class MySqlQueryFactory implements SqlQueryFactoryInterface
                     $primaryKeys[] = $this->parameters[$parameterCount];
                     $primaryKeyIds .= substr($this->parameters[0], $parameterCount-1, 1);
                 } else {
-                    $nonKeys[] = $this->parameters[$parameterCount];
+                    if ($field->getField()->getOption() === SqlFieldOption::TimeUpdate) {
+                        $nonKeys[] = date(format: 'Y-m-d H:i:s', timestamp: time());
+                    } else {
+                        $nonKeys[] = $this->parameters[$parameterCount];
+                    }
                     $nonKeyIds .= substr($this->parameters[0], $parameterCount-1, 1);
                 }
                 $parameterCount++;
